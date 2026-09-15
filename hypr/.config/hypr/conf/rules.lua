@@ -1,3 +1,5 @@
+-- ~/.config/hypr/conf/rules.lua
+
 --------------------
 ---- WINDOW RULES --
 --------------------

@@ -1,3 +1,5 @@
+-- ~/.config/hypr/conf/rose-pine.lua
+
 --[[
 name: Rosé Pine
 author: justgoodgame

@@ -1,3 +1,5 @@
+-- ~/.config/hypr/conf/environment.lua
+
 -------------------------------
 ---- ENVIRONMENT VARIABLES ----
 -------------------------------

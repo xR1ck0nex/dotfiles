@@ -1,3 +1,5 @@
+-- ~/.config/hypr/conf/keybindings.lua
+
 ---------------------
 ---- KEYBINDINGS ----
 ---------------------

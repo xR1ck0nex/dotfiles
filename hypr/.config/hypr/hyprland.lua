@@ -1,6 +1,8 @@
-require("conf/hyprland-session")
+-- ~/.config/hypr/hyprland.lua
 
+require("conf/hyprland-session")
 local theme = require("conf/rose-pine")
+
 
 ------------------
 ---- MONITORS ----
@@ -19,19 +21,19 @@ hl.monitor({
 -------------------------------------
 ---- GENERAL / LOOK AND FEEL --------
 -------------------------------------
- 
+
 -- See https://wiki.hypr.land/Configuring/Variables/ 
 hl.config({
 	general = {
 		gaps_in = 5,
 		gaps_out = 15,
 		border_size = 2,
- 
+
 		col = {
 			active_border   = { colors = { theme.iris, theme.love }, angle = 45 },
 			inactive_border = theme.overlay,
 		},
- 
+
 		resize_on_border = false,
 		allow_tearing = true,
 		layout = "dwindle",
@@ -55,19 +57,19 @@ hl.config({
 			},
 		},
 	},
- 
+
 	decoration = {
 		rounding = 12,
 		rounding_power = 3.0,
 		active_opacity = 1.0,
 		inactive_opacity = 0.8,
- 
+
 		shadow = {
 			enabled = true,
 			range = 4,
 			color = theme.base .. "aa",
 		},
- 
+
 		blur = {
 			enabled = true,
 			size = 3,
@@ -76,15 +78,15 @@ hl.config({
 			new_optimizations = true,
 		},
 	},
- 
+
 	dwindle = {
 		preserve_split = true,
 	},
- 
+
 	master = {
 		new_status = "master",
 	},
- 
+
 	misc = {
 		force_default_wallpaper = 0,
 		disable_hyprland_logo   = true,
@@ -94,7 +96,6 @@ hl.config({
 		enabled = true,
 	}
 })
- 
 
 
 -------------------

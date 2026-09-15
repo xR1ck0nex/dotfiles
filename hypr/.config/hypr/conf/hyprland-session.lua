@@ -1,3 +1,5 @@
+-- ~/.config/hypr/conf/hyprland-session.lua
+
 --------------------------
 ---- Hyprland Session ----
 --------------------------

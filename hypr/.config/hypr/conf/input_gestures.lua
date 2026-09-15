@@ -1,3 +1,5 @@
+-- ~/.config/hypr/conf/input_gestures.lua
+
 ---------------
 ---- INPUT ----
 ---------------

@@ -7,8 +7,6 @@ nitch
 # Other vars live in hyprland.lua via hl.env(). 
 # Only shell-computed variables stay here.
 
-# LS_COLORS drives ls, fd, dust and tree. `vivid themes` lists what's bundled;
-# custom themes go in ~/.config/vivid/themes/ or pass a path to `vivid generate`.
 export LS_COLORS="$(vivid generate rose-pine)"
 
 
@@ -22,7 +20,7 @@ setopt SHARE_HISTORY             # sync across open shells
 setopt HIST_IGNORE_ALL_DUPS      # drop older duplicates
 setopt HIST_IGNORE_SPACE         # leading space = not recorded
 setopt HIST_REDUCE_BLANKS
-setopt HIST_VERIFY               # expand !! before running, don't fire blind
+setopt HIST_VERIFY
 
 
 # --- shell options ---------------------------------------------------
@@ -54,7 +52,7 @@ bindkey '^?' backward-delete-char
 bindkey '^h' backward-delete-char
 bindkey '^w' backward-kill-word
 
-# history search — viins doesn't give you these
+# history search
 bindkey '^r' history-incremental-search-backward
 bindkey -M vicmd '/' history-incremental-search-forward
 bindkey -M vicmd '?' history-incremental-search-backward
@@ -89,7 +87,6 @@ function y() {
 
 
 # --- fzf -------------------------------------------------------------
-# ArchWiki: source these from .zshrc (after vi-mode, if using it)
 [ -f /usr/share/fzf/key-bindings.zsh ] && source /usr/share/fzf/key-bindings.zsh
 [ -f /usr/share/fzf/completion.zsh ]   && source /usr/share/fzf/completion.zsh
 

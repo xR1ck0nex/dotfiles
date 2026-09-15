@@ -1,3 +1,5 @@
+-- ~/.config/hypr/conf/programs.lua
+
 ---------------------
 ---- MY PROGRAMS ----
 ---------------------
