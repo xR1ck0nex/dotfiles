@@ -1,0 +1,39 @@
+.rose-pine {
+	--primary: #e0def4;
+	--secondary: #908caa;
+	--background: #191724;
+	--body-background: #191724;
+	--background-darker: #16141f;
+	--background-lighter: #1f1d2e;
+	--navbar-background: #1f1d2e;
+	--modal-background: #1f1d2e;
+	--osd-background: #26233a;
+ 
+	--accent: #c4a7e7;
+	--accent-overlay: #31748f;
+	--text-default: #e0def4;
+	--text-secondary: #908caa;
+	--text-title: #e0def4;
+	--text-log: #908caa;
+ 
+	--success: #9ccfd8;
+	--warning: #f6c177;
+	--danger: #eb6f92;
+ 
+	--divider: #26233a;
+	--border: #403d52;
+ 
+	--button-primary: #c4a7e7;
+	--button-primary-hover: #ebbcba;
+	--button-secondary: #26233a;
+ 
+	--input-background: #26233a;
+	--input-text: #e0def4;
+ 
+	--status-installed: #9ccfd8;
+	--status-updating: #f6c177;
+	--status-uninstalled: #6e6a86;
+ 
+	color: var(--text-default);
+	background-color: var(--background);
+}

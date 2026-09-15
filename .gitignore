@@ -13,3 +13,8 @@
 !waybar/**
 !termfilechooser/**
 !gtk/**
+!yazi/**
+!mako/**
+!heroic-themes/**
+!mpd/**
+!nvim/**
