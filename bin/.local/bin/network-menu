@@ -1,0 +1,71 @@
+#!/usr/bin/env zsh
+# ~/.local/bin/network-menu
+
+set -euo pipefail
+
+MENU=(hyprlauncher --dmenu)
+
+notify() { command -v notify-send >/dev/null && notify-send "Network" "$1"; }
+
+# ---- build the list -------------------------------------------------------
+# Active connection first, marked. Then every other saved profile.
+active=$(nmcli -t -f NAME connection show --active | head -n1 || true)
+
+entries=""
+while IFS=: read -r name type; do
+	[[ -z "$name" ]] && continue
+	case "$name" in
+		"$active") entries+="* ${name}  (${type})"$'\n' ;;
+		*)         entries+="  ${name}  (${type})"$'\n' ;;
+	esac
+done < <(nmcli -t -f NAME,TYPE connection show)
+
+# wifi networks, only if a wifi device exists (nothing on the desktop)
+if nmcli -t -f TYPE device status | grep -qx wifi; then
+	entries+="  --- scan wifi ---"$'\n'
+	while IFS=: read -r ssid signal security; do
+		[[ -z "$ssid" ]] && continue
+		entries+="  ${ssid}  ${signal}%  ${security:-open}"$'\n'
+	done < <(nmcli -t -f SSID,SIGNAL,SECURITY device wifi list | sort -t: -k2 -rn | head -n 15)
+fi
+
+entries+="  --- disconnect active ---"$'\n'
+entries+="  --- edit connections ---"
+
+# ---- pick -----------------------------------------------------------------
+choice=$(printf '%s' "$entries" | "${MENU[@]}") || exit 0
+[[ -z "$choice" ]] && exit 0
+
+# strip the leading marker and trailing annotation
+clean=$(sed -E 's/^[*[:space:]]+//; s/  \(.*\)$//; s/  [0-9]+%.*$//' <<<"$choice")
+
+# ---- act ------------------------------------------------------------------
+case "$clean" in
+	"--- scan wifi ---")
+		nmcli device wifi rescan
+		sleep 2
+		exec "$0"
+		;;
+	"--- disconnect active ---")
+		[[ -n "$active" ]] && nmcli connection down "$active" && notify "Disconnected $active"
+		;;
+	"--- edit connections ---")
+		foot -e nmtui
+		;;
+	"$active")
+		nmcli connection down "$active" && notify "Disconnected $active"
+		;;
+	*)
+		if nmcli -t -f NAME connection show | grep -qxF "$clean"; then
+			nmcli connection up "$clean" && notify "Connected to $clean"
+		else
+			# unsaved wifi network — needs a passphrase
+			pass=$(printf '' | "${MENU[@]}" 2>/dev/null || true)
+			if [[ -n "$pass" ]]; then
+				nmcli device wifi connect "$clean" password "$pass" && notify "Connected to $clean"
+			else
+				nmcli device wifi connect "$clean" && notify "Connected to $clean"
+			fi
+		fi
+		;;
+esac

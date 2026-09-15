@@ -4,3 +4,10 @@
 !foot/**
 !home/**
 !hypr/**
+!starship/**
+!xdg/.config/*
+!xdg/.local/share/applications/*
+!bin/**
+!btop/**
+!bat/**
+!waybar/**

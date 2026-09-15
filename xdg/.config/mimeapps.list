@@ -1,0 +1,63 @@
+[Default Applications]
+
+# directories
+inode/directory=yazi.desktop
+
+# text
+text/plain=nvim.desktop
+text/markdown=nvim.desktop
+text/x-shellscript=nvim.desktop
+application/json=nvim.desktop
+application/x-yaml=nvim.desktop
+text/x-python=nvim.desktop
+text/x-lua=nvim.desktop
+text/csv=nvim.desktop
+
+# documents
+application/pdf=librewolf.desktop
+application/epub+zip=librewolf.desktop
+
+# web
+text/html=librewolf.desktop
+x-scheme-handler/http=librewolf.desktop
+x-scheme-handler/https=librewolf.desktop
+x-scheme-handler/about=librewolf.desktop
+x-scheme-handler/unknown=librewolf.desktop
+
+# images
+image/png=imv.desktop
+image/jpeg=imv.desktop
+image/gif=imv.desktop
+image/webp=imv.desktop
+image/bmp=imv.desktop
+image/tiff=imv.desktop
+image/avif=imv.desktop
+image/svg+xml=imv.desktop
+
+# video
+video/mp4=mpv.desktop
+video/x-matroska=mpv.desktop
+video/webm=mpv.desktop
+video/quicktime=mpv.desktop
+video/x-msvideo=mpv.desktop
+video/mpeg=mpv.desktop
+video/ogg=mpv.desktop
+
+# audio
+audio/mpeg=mpv.desktop
+audio/flac=mpv.desktop
+audio/ogg=mpv.desktop
+audio/opus=mpv.desktop
+audio/wav=mpv.desktop
+audio/x-wav=mpv.desktop
+audio/mp4=mpv.desktop
+audio/aac=mpv.desktop
+
+# archives
+application/zip=yazi.desktop
+application/x-7z-compressed=yazi.desktop
+application/x-tar=yazi.desktop
+application/gzip=yazi.desktop
+application/x-xz=yazi.desktop
+application/zstd=yazi.desktop
+application/vnd.rar=yazi.desktop

@@ -1,0 +1,248 @@
+/* ~/.config/waybar/style.css */
+
+@import url("rose-pine.css");
+
+/* ---------- keyframes ---------- */
+
+@keyframes fade-in {
+	from { opacity: 0; }
+	to   { opacity: 1; }
+}
+
+@keyframes active-glow {
+	0%   { box-shadow: 0 0 0 0 alpha(@iris, 0.5) inset; }
+	70%  { box-shadow: 0 0 0 6px alpha(@iris, 0) inset; }
+	100% { box-shadow: 0 0 0 0 alpha(@iris, 0) inset; }
+}
+
+@keyframes blink {
+	0%   { background-color: @love; color: @base; }
+	50%  { background-color: @base; color: @love; }
+	100% { background-color: @love; color: @base; }
+}
+
+@keyframes breathe {
+	0%   { opacity: 1;    }
+	50%  { opacity: 0.55; }
+	100% { opacity: 1;    }
+}
+
+* {
+	font-family: "JetBrainsMono Nerd Font";
+	font-size: 13px;
+	font-weight: 500;
+	border: none;
+	border-radius: 0;
+	min-height: 0;
+	padding: 0;
+	margin: 0;
+}
+
+window#waybar {
+	background: transparent;
+	color: @text;
+	animation: fade-in 0.4s ease-out 1;
+}
+
+/* one rounded slab per group, matching hyprland's rounding = 12 */
+.modules-left,
+.modules-center,
+.modules-right {
+	background-color: @surface;
+	border-radius: 12px;
+	padding: 0 6px;
+}
+
+/* ---------- shared module padding ---------- */
+#clock,
+#cpu,
+#memory,
+#temperature,
+#window,
+#tray,
+#language,
+#wireplumber,
+#backlight,
+#network,
+#bluetooth,
+#battery {
+	padding: 0 10px;
+	color: @text;
+	transition: background-color 0.2s ease,
+	            color 0.2s ease,
+	            box-shadow 0.2s ease,
+	            padding 0.18s cubic-bezier(0.34, 1.3, 0.64, 1);
+}
+
+/* hover: ring + fill */
+#clock:hover,
+#cpu:hover,
+#memory:hover,
+#temperature:hover,
+#language:hover,
+#wireplumber:hover,
+#backlight:hover,
+#network:hover,
+#bluetooth:hover,
+#battery:hover {
+	background-color: alpha(@overlay, 0.8);
+	color: @text;
+	box-shadow: inset 0 -2px @iris;
+	border-radius: 8px;
+}
+
+/* press: snappy in, eased out */
+#clock:active,
+#cpu:active,
+#memory:active,
+#temperature:active,
+#language:active,
+#wireplumber:active,
+#backlight:active,
+#network:active,
+#bluetooth:active {
+	background-color: @overlay;
+	padding: 0 8px;
+	transition: all 0.06s ease;
+}
+
+/* ---------- left ---------- */
+#clock       { color: @text; font-weight: 700; }
+#cpu         { color: @rose; }
+#memory      { color: @iris; }
+#temperature { color: @foam; }
+
+#temperature.critical {
+	border-radius: 8px;
+	animation: blink 1s steps(1) infinite;
+}
+
+/* ---------- workspaces ---------- */
+#workspaces button {
+	padding: 0 9px;
+	color: @muted;
+	background: transparent;
+	transition: background-color 0.2s ease,
+	            color 0.2s ease,
+	            box-shadow 0.2s ease,
+	            padding 0.18s cubic-bezier(0.34, 1.3, 0.64, 1);
+}
+
+#workspaces button.active {
+	color: @iris;
+	font-weight: 700;
+	padding: 0 11px;                 
+	animation: active-glow 1.6s ease-out infinite;
+	border-radius: 8px;
+}
+
+#workspaces button.urgent {
+	color: @base;
+	border-radius: 8px;
+	animation: blink 1s steps(1) infinite;
+}
+
+#workspaces button.special {
+	color: @gold;
+}
+
+#workspaces button:hover {
+	color: @text;
+	background: @overlay;
+	border-radius: 8px;
+	padding: 0 11px;
+}
+
+#workspaces button:active {
+	background: @highlightMed;
+	padding: 0 7px;
+	transition: all 0.06s ease;
+}
+
+/* ---------- centre ---------- */
+#window {
+	color: @subtle;
+	padding: 0 12px;
+	transition: opacity 0.3s ease, color 0.3s ease;
+}
+
+window#waybar.empty .modules-center {
+	background-color: transparent;
+}
+
+window#waybar.empty #window {
+	opacity: 0;
+}
+
+#cava {
+	padding: 0 10px;
+	color: @iris;
+}
+
+#mpris {
+	padding: 0 12px;
+	color: @foam;
+	transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+ 
+/* per-status and per-player classes: #mpris.playing, #mpris.paused,
+   #mpris.stopped, #mpris.mpd, #mpris.librewolf ... */
+#mpris.playing  { color: @foam; }
+#mpris.paused   { color: @muted; }
+#mpris.stopped  { color: @muted; }
+ 
+#mpris:hover {
+	background-color: alpha(@overlay, 0.8);
+	box-shadow: inset 0 -2px @iris;
+	border-radius: 8px;
+}
+
+/* ---------- right ---------- */
+#language    { color: @foam; }
+#wireplumber { color: @pine; }
+#backlight   { color: @gold; }
+#network     { color: @foam; }
+#bluetooth   { color: @iris; }
+#battery     { color: @rose; }
+
+#wireplumber.muted,
+#network.disconnected,
+#bluetooth.off,
+#bluetooth.disabled {
+	color: @muted;
+}
+
+#battery.warning {
+	color: @gold;
+	animation: breathe 2.5s ease-in-out infinite;
+}
+
+#battery.critical {
+	border-radius: 8px;
+	animation: blink 1s steps(1) infinite;
+}
+
+#battery.charging,
+#battery.plugged {
+	color: @foam;
+}
+
+#tray > .passive {
+	-gtk-icon-effect: dim;
+}
+
+#tray > .needs-attention {
+	-gtk-icon-effect: highlight;
+}
+
+/* ---------- tooltips ---------- */
+tooltip {
+	background-color: @surface;
+	border: 1px solid @overlay;
+	border-radius: 8px;
+}
+
+tooltip label {
+	color: @text;
+	padding: 4px;
+}

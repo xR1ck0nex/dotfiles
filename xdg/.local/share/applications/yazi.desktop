@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Yazi
+Comment=Terminal file manager
+Exec=foot --app-id=yazi yazi %f
+Terminal=false
+MimeType=inode/directory;
+Categories=Utility;FileTools;

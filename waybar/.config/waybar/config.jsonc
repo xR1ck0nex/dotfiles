@@ -1,0 +1,173 @@
+// ~/.config/waybar/config.jsonc
+
+{
+	"layer": "top",
+	"position": "top",
+	"height": 32,
+	"spacing": 0,
+	"margin-top": 8,
+	"margin-left": 12,
+	"margin-right": 12,
+
+	"modules-left": [
+		"clock",
+		"cpu",
+		"memory",
+		"temperature",
+		"hyprland/workspaces"
+	],
+
+	"modules-center": [
+		"cava",
+		"hyprland/window",
+		"mpris"
+	],
+
+	"modules-right": [
+		"tray",
+		"hyprland/language",
+		"wireplumber",
+		"backlight",
+		"network",
+		"bluetooth",
+		"battery"
+	],
+
+	"clock": {
+		"format": "{:%a %d %b  %H:%M}",
+		"tooltip-format": "<tt>{calendar}</tt>",
+		"calendar": {
+			"mode": "month",
+			"format": { "today": "<b>{}</b>" }
+		}
+	},
+
+	"cpu": {
+		"format": "CPU {usage:>2}%",
+		"interval": 3,
+		"on-click": "foot btop"
+	},
+
+	"memory": {
+		"format": "RAM {percentage:>2}%",
+		"tooltip-format": "{used:0.1f}G / {total:0.1f}G",
+		"interval": 5,
+		"on-click": "foot btop"
+	},
+
+	"temperature": {
+		// REQUIRED: point this at your sensor, or the module shows nothing.
+		//   for f in /sys/class/hwmon/*/name; do echo "$f: $(cat $f)"; done
+		// k10temp = CPU package, amdgpu = GPU
+		"hwmon-path": "/sys/class/hwmon/hwmon2/temp1_input",
+		"critical-threshold": 85,
+		"format": "{temperatureC}°C",
+		"format-critical": "{temperatureC}°C !",
+		"interval": 5
+	},
+
+	"cava": {
+		"cava_config": "$HOME/.config/waybar/cava.conf",
+		"hide_on_silence": true,
+		"format-icons": ["\u2581", "\u2582", "\u2583", "\u2584", "\u2585", "\u2586", "\u2587", "\u2588"],
+        	"input_delay": 2,
+   	 	"actions": { 
+			"on-click-right": "mode" 
+		}
+	},
+
+	"mpris": {
+		"format": "{player_icon} {dynamic}",
+		"format-paused": "{status_icon} <i>{dynamic}</i>",
+		"format-stopped": "",
+		"player-icons": {
+			"default": "▶",
+			"mpd": "󰝚",
+			"mpv": "󰐊",
+			"librewolf": "󰈹"
+		},
+		"status-icons": {
+			"paused": "⏸",
+			"stopped": "⏹"
+		},
+		"dynamic-order": ["title", "artist"],
+		"dynamic-len": 60,
+		"title-len": 40,
+		"artist-len": 20,
+		"interval": 1,
+		"tooltip-format": "{player} ({status})\n{title}\n{artist}\n{album}"
+		// default actions: click = play-pause, middle = previous, right = next
+	},
+
+	"hyprland/workspaces": {
+		"format": "{name}",
+		"on-click": "activate",
+		"show-special": true,
+		"special-visible-only": true
+	},
+
+	"hyprland/window": {
+		"max-length": 90,
+		"separate-outputs": true,
+		"icon": false
+	},
+
+	"hyprland/language": {
+		"format": "{short}",
+		"format-en": "US",
+		"format-ru": "RU",
+		"tooltip": false,
+		"keyboard-name": "at-translated-set-2-keyboard"
+	},
+
+	"tray": {
+		"spacing": 10,
+		"icon-size": 16
+	},
+
+	"wireplumber": {
+		"reverse-scrolling": true,
+		"format": "VOL {volume:>2}%",
+		"format-muted": "VOL ---",
+		"on-click": "foot wiremix",
+		"on-click-right": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+		"on-scroll-up": "wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+",
+		"on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-",
+		"max-volume": 100
+	},
+
+	"backlight": {
+		"format": "BRI {percent:>2}%",
+		"on-scroll-up": "brightnessctl -e4 -n2 set 5%+",
+		"on-scroll-down": "brightnessctl -e4 -n2 set 5%-"
+	},
+
+	"network": {
+		"format-wifi": "{essid} {signalStrength}%",
+		"format-ethernet": "ETH",
+		"format-linked": "NO IP",
+		"format-disconnected": "OFFLINE",
+		"tooltip-format-wifi": "{essid}  {signalStrength}%\n{ipaddr}/{cidr}\n{bandwidthDownBits} / {bandwidthUpBits}",
+		"tooltip-format-ethernet": "{ifname}\n{ipaddr}/{cidr}\n{bandwidthDownBits} / {bandwidthUpBits}",
+		"on-click": "network-menu",
+		"interval": 5
+	},
+
+	"bluetooth": {
+		"format": "BT {status}",
+		"format-disabled": "",
+		"format-connected": "BT {device_alias}",
+		"tooltip-format": "{controller_alias}\t{controller_address}",
+		"tooltip-format-connected": "{device_enumerate}",
+		"on-click": "foot bluetui"
+	},
+
+	"battery": {
+		"states": { "warning": 30, "critical": 15 },
+		"format": "BAT {capacity}%",
+		"format-charging": "BAT {capacity}% +",
+		"format-plugged": "AC {capacity}%",
+		"format-full": "FULL",
+		"interval": 30
+	}
+}
