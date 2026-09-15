@@ -1,0 +1,6 @@
+[filechooser]
+cmd=~/.config/xdg-desktop-portal-termfilechooser/yazi-wrapper.sh
+env=TERMCMD=foot
+default_dir=~
+open_mode=suggested
+save_mode=last

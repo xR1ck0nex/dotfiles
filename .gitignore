@@ -11,3 +11,5 @@
 !btop/**
 !bat/**
 !waybar/**
+!termfilechooser/**
+!gtk/**
