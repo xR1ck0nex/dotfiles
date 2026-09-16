@@ -247,7 +247,7 @@ sudo systemctl start systemd-zram-setup@zram0.service
 zramctl && swapon --show
 ```
 
-No disk swap → no hibernation. Fine on this machine.
+No disk swap → no hibernation.
 
 ## 12. Cleanup
 
@@ -284,8 +284,7 @@ sudo snapper -c root create -d "clean base install"
 ## Graphical session (when Hyprland goes on)
 
 Hyprland doesn't tell systemd it's a graphical session, so portals (XDPH included) and any
-`WantedBy=graphical-session.target` units won't start. `uwsm` solves this but the Hyprland wiki
-labels it advanced with known quirks; the minimal alternative is one target file.
+`WantedBy=graphical-session.target` units won't start.
 
 `~/.config/systemd/user/hyprland-session.target` (wiki version — create it with
 `SYSTEMD_EDITOR=nvim systemctl --user edit --full --force hyprland-session.target`):
@@ -307,19 +306,6 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("systemctl --user start hyprland-session.target")
 end)
 ```
-
-`hl.exec_cmd` spawns immediately and asynchronously. `hl.dsp.exec_cmd` is different — it only
-builds a dispatcher object for `hl.bind`, so calling it here would run nothing at all.
-
-No `dbus-update-activation-environment` call is needed: Hyprland manages the systemd and dbus
-activation environments itself (disabled only via `HYPRLAND_NO_SD_VARS=1`). If the portal ever
-misbehaves, the XDPH wiki's fallback is `dbus-update-activation-environment --systemd --all` —
-troubleshooting, not standard setup.
-
-Autostarted daemons: most packaged units (waybar, mako, hypridle, hyprpaper) already ship
-`PartOf=` and `WantedBy=graphical-session.target`, so `systemctl --user enable <unit>` is enough.
-Use a drop-in with `WantedBy=hyprland-session.target` only for units tied to Hyprland specifically
-or lacking an `[Install]` section.
 
 Verify with `systemctl --user list-dependencies hyprland-session.target` and
 `systemctl --user status xdg-desktop-portal-hyprland` — if the portal is active, the target is
@@ -346,86 +332,6 @@ umount /mnt && reboot
 
 Delete `@broken` once the system is confirmed good: `btrfs subvolume delete /mnt/@broken`.
 
-Snapshots are read-only by default — a booted snapshot is a rescue environment, not a working desktop. And they are **not** backups: same disk, same failure domain. Real backups go to the Pi via `btrfs send`.
+Snapshots are read-only by default — a booted snapshot is a rescue environment, not a working desktop. And they are **not** backups: same disk, same failure domain.
 
-## Next
-
-Done: base install, packages, zsh, foot, yazi, Hyprland (modular Lua config with
-rose-pine palette, keybinds, rules, animations, session target), cliphist,
-termfilechooser, inode/directory handler.
-
-### Hyprland — done except the host split
-- Layer rules deliberately not used.
-- [ ] Host split: move monitor, touchpad and gestures into `conf/hosts/<hostname>.lua`
-      — deferred until the T440P migration
-
-### Daemons (each `WantedBy=hyprland-session.target`, one at a time)
-- [x] waybar — config.jsonc + style.css (rose-pine port + animations)
-      `hwmon-path` in the temperature module MUST be set per machine:
-      `for f in /sys/class/hwmon/*/name; do echo "$f: $(cat $f)"; done`
-      reload CSS without restart: `killall -SIGUSR2 waybar`
-- [x] mako — config + makoctl keybinds (dismiss / dismiss-all / dnd / restore)
-      margin=44,12,12,12 clears the bar; D-Bus activated, no unit needed
-- [x] hypridle + hyprlock — all brightnessctl listeners dropped (no backlight
-      on a desktop); suspend deliberately left commented out so remote ssh and
-      Syncthing survive. hyprlock is still hyprlang, and the rose-pine port
-      defines 0xffRRGGBB — pango markup needs its own plain-hex vars.
-- [x] hyprpaper — block-form config; verify against `hyprctl hyprpaper --help`
-
-### Interaction — done
-- cliphist watchers in the start hook (separate text and image watchers)
-- termfilechooser: backend config + `hyprland-portals.conf` routing + Librewolf
-  `widget.use-xdg-desktop-portal.file-picker=1`
-- mimeapps.list, plus custom yazi.desktop and nvim.desktop — Terminal=false and
-  %f, so GIO launches foot and passes a path rather than a file:// URI
-- network menu: `~/.local/bin/network-menu`, a plain nmcli + hyprlauncher
-  --dmenu script. networkmanager-dmenu was dropped — it has a hardcoded table
-  of known launchers, hyprlauncher isn't in it, and it produced an empty menu
-  with no error even with a correct config.ini
-- hyprlauncher.conf + hyprtoolkit.conf — colours live in hyprtoolkit;
-  hyprlauncher has no colour config of its own
-- ~/Pictures/Screenshots created (the screenshot binds fail silently without it)
-
-### Theming (rose-pine) — done
-- foot `include=`, hyprland `conf/rose-pine.lua`, hyprlock `rose-pine.conf`,
-  waybar `rose-pine.css`, mako (inline), starship (rose-pine/starship port)
-- ports for anything else: https://rosepinetheme.com/themes
-- fontconfig deliberately skipped — every app names its font explicitly, so
-  the generic monospace/sans aliases never get consulted
-
-### Apps
-- [ ] neovim from scratch: oil.nvim, yazi.nvim, LSPs, rose-pine colorscheme
-      — do the Hyprland LSP stubs here too: `lua-language-server` plus a
-        `.luarc.json` pointing at `/usr/share/hypr/stubs/`, which also settles
-        the remaining unverified `hl.*` field names
-- [x] mpd + rmpc + MPRIS. mpd runs as a USER service (a system daemon can't
-      reach the user PipeWire socket). mpd.conf expands ~ and $XDG_*, only
-      relative paths fail. Each player needs its own bridge: mpd-mpris for mpd,
-      mpv-mpris for mpv; Librewolf is native. playerctld routes commands to the
-      most recently active player.
-        systemctl --user enable --now mpd mpd-mpris playerctld
-        playerctl -l     # mpd must appear here or the bridge isn't running
-- UR242 / JACK: not needed on this machine. pipewire-jack stays installed so a
-  DAW can be added later without reworking the audio stack.
-
-### Services — done
-greetd + tuigreet, syncthing (Pi as introducer), bluetooth, WireGuard profile,
-sshfs mount for the Pi.
-
-### Storage — done
-2 TB HDD formatted and mounted. Secondary drives need `nofail` in fstab or a
-failed/absent disk blocks boot.
-
-### Gaming — done
-- steam, heroic, gamemode, mangohud, gamescope, proton-ge-custom-bin
-- On AMD the 32-bit Vulkan driver must be `lib32-vulkan-radeon`; pacman offers
-  `lib32-nvidia-utils` first by alphabetical order and that breaks Vulkan.
-- Launch options: `mangohud gamemoderun %command%` (mangohud outermost)
-- MangoHud.conf is rose-pine; toggle with Shift_R+F12
-- Heroic themed with heroic-rose-pine.css — the filename sets the body class,
-  so it must be saved as rose-pine.css; unselect/reselect to reload after edits
-- `allow_tearing` is on in hyprland.lua, with `immediate` on steam_app_* windows
-
-### Finally
-- [ ] dotfiles repo + install script + README
-- [ ] repeat on the T440P with its own `conf/hosts/` file
+---
