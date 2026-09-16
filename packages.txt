@@ -1,0 +1,173 @@
+# Desktop package manifest
+#
+# Rule: one tool per function. If two lines would share the same comment,
+# one of them goes.
+#
+# Extract the package list:
+#   grep -v '^#' packages.txt | awk 'NF {print $1}'
+#
+# What's listed here but NOT installed:
+#   comm -23 <(grep -v '^#' packages.txt | awk 'NF {print $1}' | sort -u) <(pacman -Qq | sort)
+#
+# What's installed explicitly but NOT listed here (drift the other way):
+#   comm -13 <(grep -v '^#' packages.txt | awk 'NF {print $1}' | sort -u) <(pacman -Qeq | sort)
+#
+# Check every name resolves before installing anything:
+#   for p in $(grep -v '^#' packages.txt | awk 'NF {print $1}'); do
+#     paru -Si "$p" >/dev/null 2>&1 || echo "NOT FOUND: $p"
+#   done
+
+# --- compositor / session ------------------------------------------
+hyprland                    # compositor - https://github.com/hyprwm/Hyprland
+xdg-desktop-portal-hyprland # screencast/screenshot portals - https://github.com/hyprwm/xdg-desktop-portal-hyprland
+xdg-desktop-portal-gtk      # fallback portal - https://github.com/flatpak/xdg-desktop-portal-gtk
+hyprpolkitagent             # polkit prompts - https://github.com/hyprwm/hyprpolkitagent
+qt6-wayland                 # Qt on wayland - https://archlinux.org/packages/?q=qt6-wayland
+qt5-wayland                 # https://archlinux.org/packages/?q=qt5-wayland
+hyprland-qt-support         # Qt styling for hypr tools - https://github.com/hyprwm/hyprland-qt-support
+hyprqt6engine               # Qt6 platform theme, replaces qt6ct - https://wiki.hypr.land/Hypr-Ecosystem/hyprqt6engine/
+kvantum                     # SVG widget styling, has a rose-pine port - https://github.com/tsujan/Kvantum
+rose-pine-gtk-theme-full    # [AUR] GTK3+GTK4 theme + icons - https://github.com/rose-pine/gtk
+rose-pine-cursor			# [AUR] cursor - https://github.com/rose-pine/cursor
+rose-pine-gtk-theme-full    # [AUR] GTK3+GTK4 theme + icons - https://github.com/rose-pine/gtk
+rose-pine-hyprcursor        # [AUR] cursor, hyprcursor format - https://github.com/rose-pine/hyprcursor
+nwg-look                    # [AUR] GTK settings tool for wlroots
+greetd                      # login daemon - https://git.sr.ht/~kennylevinsen/greetd
+greetd-tuigreet             # [AUR] TUI greeter - https://github.com/apognu/tuigreet
+
+# --- hypr ecosystem ------------------------------------------------
+hypridle                    # idle daemon - https://github.com/hyprwm/hypridle
+hyprlock                    # screen lock - https://github.com/hyprwm/hyprlock
+hyprpaper                   # wallpaper - https://github.com/hyprwm/hyprpaper
+
+# --- terminal / shell ----------------------------------------------
+foot                        # terminal - https://codeberg.org/dnkl/foot
+starship                    # prompt, rose-pine port at rose-pine/starship - https://github.com/starship/starship
+zsh-autosuggestions         # ghost-text suggestions from history - https://github.com/zsh-users/zsh-autosuggestions
+zsh-syntax-highlighting     # colours the command line as you type - https://github.com/zsh-users/zsh-syntax-highlighting
+
+# --- files ---------------------------------------------------------
+yazi                        # file manager - https://github.com/sxyazi/yazi
+xdg-utils                   # xdg-open, mimeapps.list - https://archlinux.org/packages/?q=xdg-utils
+xdg-desktop-portal-termfilechooser-hunkyburrito-git  # [AUR] yazi as system file picker - https://aur.archlinux.org/packages/xdg-desktop-portal-termfilechooser-hunkyburrito-git
+ffmpegthumbnailer           # yazi: video thumbnails - https://github.com/dirkvdb/ffmpegthumbnailer
+poppler                     # yazi: PDF previews - https://poppler.freedesktop.org
+imagemagick                 # yazi: image handling - https://github.com/ImageMagick/ImageMagick
+resvg                       # yazi: SVG previews - https://github.com/linebender/resvg
+7zip                        # yazi: archives - https://github.com/ip7z/7zip
+jq                          # yazi: JSON previews - https://github.com/jqlang/jq
+
+# --- shell tooling -------------------------------------------------
+fd                          # find - https://github.com/sharkdp/fd
+ripgrep                     # grep - https://github.com/BurntSushi/ripgrep
+fzf                         # fuzzy select - https://github.com/junegunn/fzf
+bat                         # cat - https://github.com/sharkdp/bat
+vivid                       # LS_COLORS generator - colours ls, fd, dust, tree - https://github.com/sharkdp/vivid
+dust                        # du - https://github.com/bootandy/dust
+duf                         # df - https://github.com/muesli/duf
+tealdeer                    # tldr pages - https://archlinux.org/packages/?q=tealdeer
+lazygit                     # git UI - https://github.com/jesseduffield/lazygit
+nitch-git                   # [AUR] system info - https://aur.archlinux.org/packages/nitch-git
+
+# --- monitoring ----------------------------------------------------
+btop                        # system monitor - https://github.com/aristocratos/btop
+
+# --- bar / launcher / notifications --------------------------------
+waybar-cava                 # [AUR] waybar + cava module - https://aur.archlinux.org/packages/waybar-cava
+hyprlauncher                # launcher + dmenu/math/unicode - https://github.com/hyprwm/hyprlauncher
+mako                        # notification daemon - https://github.com/emersion/mako
+libnotify                   # notify-send - https://archlinux.org/packages/?q=libnotify
+
+# --- clipboard / capture -------------------------------------------
+wl-clipboard                # wl-copy / wl-paste - https://github.com/bugaevc/wl-clipboard
+cliphist                    # clipboard history - https://github.com/sentriz/cliphist
+grim                        # screenshot - https://sr.ht/~emersion/grim
+slurp                       # region select - https://github.com/emersion/slurp
+obs-studio                  # screen recording and streaming - https://github.com/obsproject/obs-studio
+
+# --- audio ---------------------------------------------------------
+pipewire                    # audio server - https://gitlab.freedesktop.org/pipewire/pipewire
+pipewire-pulse              # pulse compatibility
+pipewire-alsa               # alsa compatibility
+pipewire-jack               # jack compatibility (USB audio interface)
+wireplumber                 # session manager - https://gitlab.freedesktop.org/pipewire/wireplumber
+wiremix                     # TUI mixer - https://github.com/tsowell/wiremix
+
+# --- bluetooth -----------------------------------------------------
+bluez                       # bluetooth stack - https://www.bluez.org
+bluez-utils                 # bluetoothctl
+bluetui                     # [AUR] TUI bluetooth manager - https://github.com/pythops/bluetui
+
+# --- network -------------------------------------------------------
+wireguard-tools             # wg-quick for the homelab VPN - https://git.zx2c4.com/wireguard-tools
+openssh                     # ssh client - https://www.openssh.com
+sshfs                       # mount the Pi's filesystem, browsable in yazi - https://github.com/libfuse/sshfs
+rsync                       # transfers and backups - https://rsync.samba.org
+trippy                      # TUI traceroute + ping in one - https://github.com/fujiapple852/trippy
+syncthing                   # continuous sync of uni files and STLs across devices - https://github.com/syncthing/syncthing
+yt-dlp                      # media downloader - https://github.com/yt-dlp/yt-dlp
+
+# --- media ---------------------------------------------------------
+mpv                         # video - https://github.com/mpv-player/mpv
+imv                         # images - https://sr.ht/~exec64/imv
+mpd                         # music daemon - https://github.com/MusicPlayerDaemon/MPD
+rmpc                        # [AUR] TUI MPD client - https://github.com/mierak/rmpc
+playerctl                   # MPRIS control - https://github.com/altdesktop/playerctl
+playerctld-systemd-unit     # [AUR] user unit for playerctld; the playerctl package ships none
+mpd-mpris                   # [AUR] MPRIS bridge for mpd - https://github.com/natsukagami/mpd-mpris
+mpv-mpris                   # MPRIS bridge for mpv - https://github.com/hoyon/mpv-mpris
+
+# --- browser -------------------------------------------------------
+librewolf                   # browser, also the PDF viewer - https://codeberg.org/librewolf
+
+# --- creative ------------------------------------------------------
+gimp                        # raster image editing - https://www.gimp.org
+blender                     # 3D - https://projects.blender.org
+
+# --- graphics (AMD) ------------------------------------------------
+mesa                        # OpenGL - https://gitlab.freedesktop.org/mesa/mesa
+lib32-mesa                  # 32-bit OpenGL, needed by older games
+vulkan-radeon               # Vulkan driver - https://gitlab.freedesktop.org/mesa/mesa
+lib32-vulkan-radeon         # 32-bit Vulkan
+vulkan-mesa-layers          # validation/overlay layers
+lib32-vulkan-mesa-layers
+amdgpu_top                  # [AUR] TUI GPU monitor - https://github.com/Umio-Yasuno/amdgpu_top
+
+# --- gaming --------------------------------------------------------
+# Requires [multilib] enabled in /etc/pacman.conf
+steam                       # https://store.steampowered.com
+heroic-games-launcher-bin   # [AUR] Epic + GOG + Amazon - https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher
+gamemode                    # CPU governor during games - https://github.com/FeralInteractive/gamemode
+lib32-gamemode
+mangohud                    # FPS/temps/frametime overlay - https://github.com/flightlessmango/MangoHud
+lib32-mangohud
+gamescope                   # scaling, fps cap, HDR - https://github.com/ValveSoftware/gamescope
+proton-ge-custom-bin        # [AUR] Proton-GE - https://github.com/GloriousEggroll/proton-ge-custom
+
+# --- programming ---------------------------------------------------
+lua-language-server         # LSP for lua + the hyprland hl stubs - https://github.com/LuaLS/lua-language-server
+clang                       # clangd LSP for C/C++ - https://github.com/llvm/llvm-project
+
+# --- 3D printing ---------------------------------------------------
+superslicer-bin             # [AUR] slicer for the Ender 3 - https://github.com/supermerill/SuperSlicer
+freecad                     # parametric CAD for printable parts - https://github.com/FreeCAD/FreeCAD
+
+# --- video ---------------------------------------------------------
+ffmpeg                      # encode/decode, also a CLI editor - https://ffmpeg.org
+shotcut                     # NLE - https://github.com/mltframework/shotcut
+libva-utils                 # verify VAAPI hardware encode - https://github.com/intel/libva-utils
+
+# --- fonts ---------------------------------------------------------
+ttf-jetbrains-mono-nerd     # single family, full Cyrillic - https://github.com/ryanoasis/nerd-fonts
+noto-fonts                  # fallback coverage
+noto-fonts-emoji            # emoji
+
+# --- system --------------------------------------------------------
+polkit                      # privilege prompts - https://github.com/polkit-org/polkit
+udisks2                     # removable media mounting - https://github.com/storaged-project/udisks
+man-db                      # man pages
+man-pages
+
+# --- already installed at base (see desktop-build-record.md) --------
+# base base-devel linux linux-firmware btrfs-progs <cpu>-ucode limine
+# efibootmgr networkmanager neovim git zsh sudo snapper snap-pac zram-generator
