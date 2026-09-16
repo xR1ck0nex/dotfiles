@@ -2,9 +2,9 @@
 
 Arch Linux + Hyprland, rose-pine throughout, TUI-first. Managed with GNU Stow.
 
-It tries to stay as **universal** as possible. Anything that only applies to one machine is either harmless on the
-other (touchpad config with no touchpad) or falls back cleanly (the monitor
-catch-all with `mode = "preferred"`).
+It tries to stay as **universal** as possible. Anything that only applies to one
+machine is either harmless on the other (touchpad config with no touchpad) or
+falls back cleanly (the monitor catch-all with `mode = "preferred"`).
 
 ---
 
@@ -45,22 +45,22 @@ Stages run individually: `packages`, `dirs`, `stow`, `post`, `services`, `manual
 `services` — a broken greeter means no graphical login.
 
 For the OS install underneath this (partitioning, btrfs subvolumes, limine,
-snapper, zram) see **desktop-build-record.md**.
+snapper, zram) see **arch-install.md**.
 
 ---
 
 ## Hand-written scripts (`bin/`)
- 
+
 Everything else in this repo is configuration for software someone else wrote.
 These are programs **written for this setup**, and they have no upstream — if
 they are lost, they are gone. Treat them as the most valuable files here.
- 
+
 ### `network-menu`
- 
+
 Lists NetworkManager connections and wifi networks, pipes them through
 `hyprlauncher --dmenu`, and acts on the selection with `nmcli`. Bound to
 `SUPER + N`.
- 
+
 It exists because **networkmanager-dmenu does not work with hyprlauncher**. That
 script carries a hardcoded table of supported launchers — bemenu, dmenu, fuzzel,
 rofi, tofi, walker, wmenu, wofi — and appends per-launcher prompt flags by
@@ -69,19 +69,19 @@ binary called `dmenu` that does not exist here (`FileNotFoundError: 'dmenu'`),
 and even with a correct `config.ini` naming hyprlauncher explicitly, the menu
 came back empty with no error. Rather than debug someone else's Python, this
 does the same job in ~60 lines where every step is visible.
- 
+
 **Known limitation:** the passphrase prompt for a **new** wifi network pipes an
 empty list to the launcher and reads what you type, with **no masking**. For a
 network you have not joined before, use `nmcli device wifi connect SSID --ask`
 in a terminal instead.
- 
+
 ### Adding another
- 
+
 Scripts go in `bin/.local/bin/`, `chmod +x` (git tracks the exec bit, so it
 survives a clone). `~/.local/bin` is put on `PATH` by `conf/environment.lua` via
 `hl.env` — **not** by `.zshrc`, because Hyprland keybinds, waybar click actions
 and systemd user services never read `.zshrc`.
- 
+
 ---
 
 ## What is NOT in here, and why
