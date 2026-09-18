@@ -58,8 +58,6 @@ resvg                       # yazi: SVG previews - https://github.com/linebender
 jq                          # yazi: JSON previews - https://github.com/jqlang/jq
 
 # --- shell tooling -------------------------------------------------
-fd                          # find - https://github.com/sharkdp/fd
-ripgrep                     # grep - https://github.com/BurntSushi/ripgrep
 fzf                         # fuzzy select - https://github.com/junegunn/fzf
 bat                         # cat - https://github.com/sharkdp/bat
 vivid                       # LS_COLORS generator - colours ls, fd, dust, tree - https://github.com/sharkdp/vivid
@@ -83,7 +81,6 @@ wl-clipboard                # wl-copy / wl-paste - https://github.com/bugaevc/wl
 cliphist                    # clipboard history - https://github.com/sentriz/cliphist
 grim                        # screenshot - https://sr.ht/~emersion/grim
 slurp                       # region select - https://github.com/emersion/slurp
-obs-studio                  # screen recording and streaming - https://github.com/obsproject/obs-studio
 
 # --- audio ---------------------------------------------------------
 pipewire                    # audio server - https://gitlab.freedesktop.org/pipewire/pipewire
@@ -103,7 +100,6 @@ wireguard-tools             # wg-quick for the homelab VPN - https://git.zx2c4.c
 openssh                     # ssh client - https://www.openssh.com
 sshfs                       # mount the Pi's filesystem, browsable in yazi - https://github.com/libfuse/sshfs
 rsync                       # transfers and backups - https://rsync.samba.org
-trippy                      # TUI traceroute + ping in one - https://github.com/fujiapple852/trippy
 syncthing                   # continuous sync of uni files and STLs across devices - https://github.com/syncthing/syncthing
 yt-dlp                      # media downloader - https://github.com/yt-dlp/yt-dlp
 
@@ -118,29 +114,34 @@ mpd-mpris                   # [AUR] MPRIS bridge for mpd - https://github.com/na
 mpv-mpris                   # MPRIS bridge for mpv - https://github.com/hoyon/mpv-mpris
 
 # --- browser -------------------------------------------------------
-librewolf                   # browser, also the PDF viewer - https://codeberg.org/librewolf
+librewolf                   # browser - https://codeberg.org/librewolf
 
 # --- creative ------------------------------------------------------
 gimp                        # raster image editing - https://www.gimp.org
 blender                     # 3D - https://projects.blender.org
+obs-studio                  # screen recording and streaming - https://github.com/obsproject/obs-studio
 
 # --- graphics (AMD) ------------------------------------------------
-mesa                        # OpenGL - https://gitlab.freedesktop.org/mesa/mesa
-lib32-mesa                  # 32-bit OpenGL, needed by older games
-vulkan-radeon               # Vulkan driver - https://gitlab.freedesktop.org/mesa/mesa
-lib32-vulkan-radeon         # 32-bit Vulkan
-vulkan-mesa-layers          # validation/overlay layers
-lib32-vulkan-mesa-layers
-amdgpu_top                  # [AUR] TUI GPU monitor - https://github.com/Umio-Yasuno/amdgpu_top
+# drivers will be installed based on GPU by ./install.sh
+#mesa                        # OpenGL - https://gitlab.freedesktop.org/mesa/mesa
+#lib32-mesa                  # 32-bit OpenGL, needed by older games
+#vulkan-mesa-layers          # validation/overlay layers
+#lib32-vulkan-mesa-layers    # 32-bit version
+#vulkan-icd-loader	    # Vulkan ICD Loader - https://www.vulkan.org
+#lib32-vulkan-icd-loader     # 32-bit version
+#vulkan-radeon              # Vulkan Radeon driver - https://gitlab.freedesktop.org/mesa/mesa
+#lib32-vulkan-radeon        # 32-bit Vulkan
+#vulkan-intel		    # Vulkan Intel driver - https://gitlab.freedesktop.org/mesa/mesa
+#lib32-vulkan-intel         # 32-bit Vulkan
+#nvidia-utils		    # Nvidia proprietary drivers
+#lib32-nvidia-utils	    # 32-bit Nvidia
 
 # --- gaming --------------------------------------------------------
 # Requires [multilib] enabled in /etc/pacman.conf
+heroic-games-launcher-bin   # FOSS game launcher for Linux - https://github.com/Heroic-Games-Laucnher/HeroicGamesLauncher
 steam                       # https://store.steampowered.com
-heroic-games-launcher-bin   # [AUR] Epic + GOG + Amazon - https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher
 gamemode                    # CPU governor during games - https://github.com/FeralInteractive/gamemode
 lib32-gamemode
-mangohud                    # FPS/temps/frametime overlay - https://github.com/flightlessmango/MangoHud
-lib32-mangohud
 gamescope                   # scaling, fps cap, HDR - https://github.com/ValveSoftware/gamescope
 proton-ge-custom-bin        # [AUR] Proton-GE - https://github.com/GloriousEggroll/proton-ge-custom
 
@@ -163,11 +164,13 @@ noto-fonts                  # fallback coverage
 noto-fonts-emoji            # emoji
 
 # --- system --------------------------------------------------------
+limine-snapper-sync         # limine-snapper-sync - https://gitlab.com/Zesko/limine-snapper-sync
+stow                        # GNU stow - https://www.gnu.org/software/stow/
 polkit                      # privilege prompts - https://github.com/polkit-org/polkit
 udisks2                     # removable media mounting - https://github.com/storaged-project/udisks
 man-db                      # man pages
 man-pages
 
-# --- already installed at base (see desktop-build-record.md) --------
+# --- already installed at base (see arch-install.md) --------
 # base base-devel linux linux-firmware btrfs-progs <cpu>-ucode limine
 # efibootmgr networkmanager neovim git zsh sudo snapper snap-pac zram-generator

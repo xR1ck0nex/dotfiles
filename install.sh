@@ -52,8 +52,32 @@ packages() {
 		read -rp "Continue? [y/N] " a; [[ $a == [yY] ]] || exit 1
 	fi
 
-	say "Installing"
+	say "Installing GPU drivers based on vendor"
+	GPU_INFO="$(lspci | grep -Ei 'vga|3d|display' | head -n 1 || true)"
+
+	if [[ -z "$GPU_INFO" ]]; then
+		warn "No GPU detected - no drivers will be installed"
+	else
+		say "Detected GPU: "
+		echo "$GPU_INFO"
+		paru -S mesa lib32-mesa vulkan-mesa-layers lib32-vulkan-mesa-layers vulkan-icd-loader lib32-vulkan-icd-loader 
+
+		case "$GPU_INFO" in
+			*AMD*|*Radeon*)
+				paru -S vulkan-radeon lib32-vulkan-radeon
+				;;
+			*Intel*|*Arc*)
+				paru -S vulkan-intel lib32-vulkan-intel
+				;;
+			*NVIDIA*|*Geforce*|*RTX*|*GTX*)
+				paru -S nvidia-utils lib32-nvidia-utils
+				;;
+		esac
+	fi
+
+	say "Installing the rest"
 	paru -S --needed $(grep -v '^#' packages.txt | awk 'NF {print $1}')
+	paru -Rsnu $(paru -Qdtq)
 }
 
 # -------------------------------------------------------------------- dirs
@@ -100,13 +124,11 @@ services() {
 	warn "with 'greetd --config ...' or from a TTY before enabling it by hand."
 
 	say "System units"
-	sudo systemctl enable --now NetworkManager bluetooth fstrim.timer \
-	                            snapper-cleanup.timer limine-snapper-sync.service
+	sudo systemctl enable --now NetworkManager bluetooth fstrim.timer snapper-cleanup.timer limine-snapper-sync.service
 
 	say "User units"
 	systemctl --user daemon-reload
-	systemctl --user enable --now mpd mpd-mpris playerctld syncthing \
-	                              waybar hypridle
+	systemctl --user enable --now mpd mpd.socket mpd-mpris playerctld syncthing graphical-session waybar hypridle
 }
 
 # ------------------------------------------------------------------ manual
