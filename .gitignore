@@ -18,6 +18,7 @@
 !heroic-themes/**
 !mpd/**
 !nvim/**
+nvim/.config/nvim/nvim-pack-lock.json
 !arch-install.md
 !packages.txt
 !README.md
