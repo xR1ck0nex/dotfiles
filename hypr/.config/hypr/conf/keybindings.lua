@@ -11,7 +11,7 @@ local mainMod = "SUPER"
 --     https://wiki.hypr.land/Configuring/Basics/Dispatchers/
 
 ---- applications ----
-hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd(v.terminal)) 
+hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd(v.terminal))
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(v.fileManager))
 hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(v.menu))
 hl.bind(mainMod .. " + B", hl.dsp.exec_cmd(v.browser))
@@ -88,26 +88,24 @@ hl.bind(mainMod .. " + SHIFT + h", hl.dsp.window.move({ direction = "left" }))
 hl.bind(mainMod .. " + SHIFT + j", hl.dsp.window.move({ direction = "down" }))
 hl.bind(mainMod .. " + SHIFT + k", hl.dsp.window.move({ direction = "up" }))
 hl.bind(mainMod .. " + SHIFT + l", hl.dsp.window.move({ direction = "right" }))
- 
+
 ---- resize with the keyboard ----
 local step = 40
 local function resize(dx, dy, name)
 	return hl.dsp.window.resize({ x = dx, y = dy, relative = true }),
 	       { description = "Resize active window " .. name, repeating = true }
 end
- 
+
 hl.bind(mainMod .. " + CTRL + h", resize(-step, 0, "left"))
 hl.bind(mainMod .. " + CTRL + j", resize(0, step,  "down"))
 hl.bind(mainMod .. " + CTRL + k", resize(0, -step, "up"))
 hl.bind(mainMod .. " + CTRL + l", resize(step, 0,  "right"))
- 
+
 ---- mouse: drag to move, drag to resize ----
 -- 272 = LMB, 273 = RMB 
-hl.config({ binds = { drag_threshold = 5 } })
- 
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true, drag = true })
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true, drag = true })
- 
+
 ---- scroll through workspaces ----
 hl.bind(mainMod .. " + mouse_down", hl.dsp.focus({ workspace = "e+1" }))
 hl.bind(mainMod .. " + mouse_up",   hl.dsp.focus({ workspace = "e-1" }))

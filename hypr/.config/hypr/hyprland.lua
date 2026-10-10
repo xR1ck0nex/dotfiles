@@ -108,4 +108,4 @@ require("conf/keybindings")
 require("conf/input_gestures")
 require("conf/animations")
 require("conf/rules")
-
+require("conf/gamemode")
