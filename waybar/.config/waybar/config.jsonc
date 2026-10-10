@@ -113,7 +113,7 @@
 
 	"hyprland/language": {
 		"format": "{}",
-		"format-en": "US",
+		"format-en": "EN",
 		"format-ru": "RU",
 		"tooltip": false
 	},

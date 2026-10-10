@@ -20,17 +20,6 @@ max_height    = 1200
 image_filter  = "lanczos3"    
 image_quality = 80
 
-[opener]
-edit = [
-  { run = '$EDITOR "$@"', block = true, desc = "Edit", for = "unix" },
-]
-open = [
-  { run = 'xdg-open "$@"', desc = "Open", orphan = true, for = "linux" },
-]
-extract = [
-  { run = '7z x -y "$@"', desc = "Extract here", for = "unix" },
-]
-
 [open]
 prepend_rules = [
   { mime = "text/*",           use = ["edit", "open"] },

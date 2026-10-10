@@ -121,7 +121,7 @@ gimp                        # raster image editing - https://www.gimp.org
 blender                     # 3D - https://projects.blender.org
 obs-studio                  # screen recording and streaming - https://github.com/obsproject/obs-studio
 
-# --- graphics (AMD) ------------------------------------------------
+# --- graphics ------------------------------------------------
 # drivers will be installed based on GPU by ./install.sh
 #mesa                        # OpenGL - https://gitlab.freedesktop.org/mesa/mesa
 #lib32-mesa                  # 32-bit OpenGL, needed by older games
@@ -146,8 +146,23 @@ gamescope                   # scaling, fps cap, HDR - https://github.com/ValveSo
 proton-ge-custom-bin        # [AUR] Proton-GE - https://github.com/GloriousEggroll/proton-ge-custom
 
 # --- programming ---------------------------------------------------
+php                         # PHP runtime, needed by phpactor - https://github.com/php/php-src
+phpactor                    # PHP LSP: completion, refactoring - https://github.com/phpactor/phpactor
+composer                    # PHP dependency manager, optional for phpactor - https://github.com/composer/composer
+tree-sitter-cli             # Tree-sitter-cli needed for treesitter.nvim - https://github.com/tree-sitter/tree-sitter/
+prettier                    # Prettier is an opinionated code formatter - https://github.com/prettier/prettier
 lua-language-server         # LSP for lua + the hyprland hl stubs - https://github.com/LuaLS/lua-language-server
 clang                       # clangd LSP for C/C++ - https://github.com/llvm/llvm-project
+pyright                     # Python LSP: types, completion, hover - https://github.com/microsoft/pyright
+ruff                        # Python linter/formatter, also an LSP - https://github.com/astral-sh/ruff
+bash-language-server        # bashls LSP for sh/bash scripts - https://github.com/bash-lsp/bash-language-server
+shellcheck                  # shell linter, gives bashls its diagnostics - https://github.com/koalaman/shellcheck
+texlab                      # LaTeX LSP: completion, \ref/\cite, build - https://github.com/latex-lsp/texlab
+tinymist                    # Typst LSP + preview/export - https://github.com/Myriad-Dreamin/tinymist
+marksman                    # Markdown LSP: links, headings, wiki-links - https://github.com/artempyanykh/marksman
+vscode-html-languageserver  # html LSP for HTML (+ embedded CSS/JS) - https://github.com/microsoft/vscode
+vscode-css-languageserver   # cssls LSP for CSS/SCSS/LESS - https://github.com/microsoft/vscode
+vscode-json-languageserver  # jsonls LSP for JSON (schema validation) - https://github.com/microsoft/vscode
 
 # --- 3D printing ---------------------------------------------------
 superslicer-bin             # [AUR] slicer for the Ender 3 - https://github.com/supermerill/SuperSlicer
