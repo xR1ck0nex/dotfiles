@@ -27,7 +27,11 @@ vim.lsp.config("pyright", {
 })
 
 vim.lsp.config("tinymist", {
-  settings = { formatterMode = "typstyle", exportPdf = "onSave" },
+  settings = {
+	  formatterMode = "typstyle",
+	  formatterPrintWidth = 80,
+	  exportPdf = "onSave",
+  },
 })
 
 vim.lsp.config("marksman", {

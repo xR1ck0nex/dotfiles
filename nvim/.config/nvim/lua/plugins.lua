@@ -17,7 +17,7 @@ vim.api.nvim_create_autocmd("PackChanged", {
 -- Plugins add
 --------------------------------------------------------------------
 vim.pack.add({
-	{ src = "https://github.com/rose-pine/neovim",        name = "rose-pine" },
+	{ src = "https://github.com/rose-pine/neovim",	name = "rose-pine" },
 	{ src = "https://github.com/nvim-lua/plenary.nvim"},
 	{ src = "https://github.com/mikavilpas/yazi.nvim" },
 	{ src = "https://github.com/ibhagwan/fzf-lua" },
@@ -28,6 +28,7 @@ vim.pack.add({
 	{ src = "https://github.com/folke/which-key.nvim" },
 	{ src = "https://github.com/brianhuster/live-preview.nvim" },
 	{ src = "https://github.com/MeanderingProgrammer/render-markdown.nvim" },
+	{ src = "https://github.com/chomosuke/typst-preview.nvim",	version = vim.version.range("1") },
 	{ src = "https://github.com/neovim/nvim-lspconfig" },
 })
 
@@ -188,7 +189,19 @@ require("livepreview.config").set({
 -- render-markdown.nvim
 --------------------------------------------------------------------
 require("render-markdown").setup({
-  completions = { lsp = { enabled = true } },
+  completions = {
+	  lsp = { enabled = true }
+  },
+})
+
+--------------------------------------------------------------------
+-- typst-preview.nvim
+--------------------------------------------------------------------
+require("typst-preview").setup({
+	dependencies_bin = { tinymist = "tinymist" },
+	open_cmd = "librewolf %s",
+	follow_curso = true,
+	invert_colors = "never",
 })
 
 --------------------------------------------------------------------
