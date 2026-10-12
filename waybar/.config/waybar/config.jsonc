@@ -63,6 +63,7 @@
 		"critical-threshold": 85,
 		"format": "{temperatureC}°C",
 		"format-critical": "{temperatureC}°C !",
+		"on-click": "foot btop",
 		"interval": 5
 	},
 
@@ -124,9 +125,9 @@
 	},
 
 	"wireplumber": {
-		"reverse-scrolling": true,
 		"format": "VOL {volume:>2}%",
 		"format-muted": "VOL ---",
+		"reverse-scrolling": true,
 		"on-click": "foot wiremix",
 		"on-click-right": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
 		"on-scroll-up": "wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+",
@@ -136,8 +137,9 @@
 
 	"backlight": {
 		"format": "BRI {percent:>2}%",
-		"on-scroll-up": "brightnessctl -e4 -n2 set 5%+",
-		"on-scroll-down": "brightnessctl -e4 -n2 set 5%-"
+		"reverse-scrolling": true,
+		"on-scroll-up": "brightnessctl set 1+",
+		"on-scroll-down": "brightnessctl set 1-",
 	},
 
 	"network": {

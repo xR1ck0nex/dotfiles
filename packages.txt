@@ -185,6 +185,7 @@ polkit                      # privilege prompts - https://github.com/polkit-org/
 udisks2                     # removable media mounting - https://github.com/storaged-project/udisks
 man-db                      # man pages
 man-pages
+brightnessctl               # brightness management - https://github.com/Hummer12007/brightnessctl
 
 # --- already installed at base (see arch-install.md) --------
 # base base-devel linux linux-firmware btrfs-progs <cpu>-ucode limine
