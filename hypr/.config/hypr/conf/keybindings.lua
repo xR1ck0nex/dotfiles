@@ -49,10 +49,40 @@ hl.bind(mainMod .. " + Q", hl.dsp.workspace.toggle_special("magic"))
 hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.window.move({ workspace = "special:magic" }))
 
 ---- audio (wireplumber) ----
-hl.bind("XF86AudioRaiseVolume",  hl.dsp.exec_cmd("wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+"), { locked = true, repeating = true })
-hl.bind("XF86AudioLowerVolume",  hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),        { locked = true, repeating = true })
-hl.bind("XF86AudioMute",         hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"),       { locked = true })
-hl.bind("XF86AudioMicMute",      hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"),     { locked = true })
+
+local function notify_volume()
+	local p = io.popen("wpctl get-volume @DEFAULT_AUDIO_SINK@")
+	if not p then return end
+	local out = p:read("l") or ""
+	p:close()
+
+	local vol = tonumber(out:match("Volume:%s*([%d%.]+)"))
+	if not vol then return end
+
+	local muted = out:find("%[MUTED%]") and " (muted)" or ""
+	hl.exec_cmd(string.format("notify-send -h string:x-canonical-private-synchronous:volume 'Vol: %d%%%s'", math.floor(vol * 100 + 0.5), muted))
+end
+
+local function wpctl(args)
+	os.execute("wpctl " .. args)
+end
+
+hl.bind("XF86AudioRaiseVolume", function()
+	wpctl("set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+")
+	notify_volume()
+end, { locked = true, repeating = true })
+
+hl.bind("XF86AudioLowerVolume", function()
+	wpctl("set-volume @DEFAULT_AUDIO_SINK@ 5%-")
+	notify_volume()
+end, { locked = true, repeating = true })
+
+hl.bind("XF86AudioMute", function()
+	wpctl("set-mute @DEFAULT_AUDIO_SINK@ toggle")
+	notify_volume()
+end, { locked = true })
+
+hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"), { locked = true })
 
 ---- brightness ----
 hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("brightnessctl set 1+"), { locked = true, repeating = true } )

@@ -11,6 +11,9 @@ vim.g.maplocalleader = " "
 
 local o = vim.opt
 
+-- project-local config
+o.exrc = true
+
 -- files / undo
 o.undofile = true
 o.swapfile = false

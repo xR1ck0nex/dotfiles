@@ -30,6 +30,7 @@ vim.pack.add({
 	{ src = "https://github.com/MeanderingProgrammer/render-markdown.nvim" },
 	{ src = "https://github.com/chomosuke/typst-preview.nvim",	version = vim.version.range("1") },
 	{ src = "https://github.com/neovim/nvim-lspconfig" },
+	{ src = "https://github.com/nvim-mini/mini.pairs" },
 })
 
 --------------------------------------------------------------------
@@ -203,6 +204,11 @@ require("typst-preview").setup({
 	follow_curso = true,
 	invert_colors = "never",
 })
+
+--------------------------------------------------------------------
+-- mini.pairs
+--------------------------------------------------------------------
+require("mini.pairs").setup()
 
 --------------------------------------------------------------------
 -- :PackClean -> delete plugins no longer listed in vim.pack.add()
