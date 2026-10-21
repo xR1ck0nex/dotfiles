@@ -6,7 +6,9 @@
 !hypr/**
 !starship/**
 !xdg/.config/*
-!xdg/.local/share/applications/*
+!xdg/.local/share/applications/nvim.desktop
+!xdg/.local/share/applications/yazi.desktop
+!xdg/.local/share/applications/mimeinfo.cache
 xdg/.local/share/applications/mimeinfo.cache
 !bin/**
 !btop/**
