@@ -6,6 +6,8 @@ It tries to stay as **universal** as possible. Anything that only applies to one
 machine is either harmless on the other (touchpad config with no touchpad) or
 falls back cleanly (the monitor catch-all with `mode = "preferred"`).
 
+![demo](preview.gif)
+
 ---
 
 ## Layout

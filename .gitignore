@@ -27,3 +27,4 @@ nvim/.config/nvim/nvim-pack-lock.json
 !README.md
 !install.sh
 !systemd/**
+!preview.gif
