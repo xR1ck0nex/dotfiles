@@ -137,8 +137,8 @@ hl.bind(mainMod .. " + CTRL + l", resize(step, 0,  "right"))
 
 ---- mouse: drag to move, drag to resize ----
 -- 272 = LMB, 273 = RMB 
-hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true, drag = true })
-hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true, drag = true })
+hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
+hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
 ---- scroll through workspaces ----
 hl.bind(mainMod .. " + mouse_down", hl.dsp.focus({ workspace = "e+1" }))
