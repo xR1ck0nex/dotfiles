@@ -1,71 +1,357 @@
 #!/usr/bin/env zsh
-# ~/.local/bin/network-menu
+# ~/.local/bin/network-menu - NetworkManager menu for hyprlauncher
+#
+# Glossary
+#   profile  a saved NetworkManager connection, keyed by UUID
+#   link     a profile that carries traffic itself (wifi, ethernet, ...)
+#   vpn      a profile layered on a link (wireguard, vpn)
+#   primary  the first active link; "disconnect" and "details" act on it
+#   network  a Wi-Fi network seen in a scan, keyed by SSID
+#   action   what choosing a menu line does, e.g. "vpn:<uuid>"
+#
+# Needs: nmcli, hyprlauncher, foot. Optional: notify-send, wl-copy, qrencode.
 
-set -euo pipefail
+set -uo pipefail
+setopt extended_glob
 
+# ---- settings -------------------------------------------------------------
 MENU=(hyprlauncher --dmenu)
+TERMINAL=(foot -a network-menu)   # app-id for a Hyprland float rule
+HOLD=(-H)                         # keep the terminal open after the command
+HOTSPOT_NAME=Hotspot
+PORTAL_URL=http://neverssl.com
+SCAN_LIMIT=15
 
-notify() { command -v notify-send >/dev/null && notify-send "Network" "$1"; }
+SELF=${ZSH_ARGZERO:A}
 
-# ---- build the list -------------------------------------------------------
-# Active connection first, marked. Then every other saved profile.
-active=$(nmcli -t -f NAME connection show --active | head -n1 || true)
+# ---- state, parsed once from nmcli ----------------------------------------
+typeset -a order            # profile UUIDs in nmcli order
+typeset -A kind name active device ssid   # by UUID
+typeset -A saved_ssid       # SSID -> UUID of the profile for it
+typeset -A net_sec          # SSID -> security as seen in the scan
+primary= hotspot=
+typeset -a lines            # current menu, in order
+typeset -A act              # trimmed menu line -> action
 
-entries=""
-while IFS=: read -r name type; do
-	[[ -z "$name" ]] && continue
-	case "$name" in
-		"$active") entries+="* ${name}  (${type})"$'\n' ;;
-		*)         entries+="  ${name}  (${type})"$'\n' ;;
+# ---- helpers --------------------------------------------------------------
+notify() {
+	(( $+commands[notify-send] )) && notify-send -a network-menu "Network" "$1"
+	return 0
+}
+
+# nmcli terse output escapes ':' and '\' with '\'; undo that for one value
+unesc() { REPLY=${1//(#b)\\(?)/${match[1]}} }
+
+trim() { REPLY=${${1##[[:space:]]#}%%[[:space:]]#} }
+
+# show lines in the launcher, print the chosen one; non-zero on Esc
+menu() { print -rl -- "$@" | "${MENU[@]}" }
+
+# append a menu line; repeated labels (NM allows duplicate names) get " #2"...
+add() {
+	local label=$1
+	integer n=1
+	trim "$label"
+	while (( ${+act[$REPLY]} )); do
+		label="$1 #$(( ++n ))"
+		trim "$label"
+	done
+	lines+=("$label")
+	act[$REPLY]=$2
+}
+
+choose() {
+	local choice
+	choice=$(menu $lines) || return 1
+	trim "$choice"
+	[[ -n $REPLY && -n ${act[$REPLY]-} ]] || return 1
+	dispatch ${act[$REPLY]}
+}
+
+confirm() { [[ $(menu "no, keep it" "yes, $1") == *yes,* ]] }
+
+# run a command, notify its success message or the error nmcli printed
+run() {
+	local msg=$1 out
+	shift
+	if out=$("$@" 2>&1); then
+		notify $msg
+		return 0
+	fi
+	notify "Failed: ${${out##*$'\n'}:-$*}"
+	return 1
+}
+
+# ---- parsing --------------------------------------------------------------
+kind_of() {
+	case $1 in
+		802-11-wireless|wifi) REPLY=wifi ;;
+		802-3-ethernet|ethernet) REPLY=ethernet ;;
+		wireguard|vpn) REPLY=vpn ;;
+		loopback) REPLY=skip ;;
+		*) REPLY=$1 ;;
 	esac
-done < <(nmcli -t -f NAME,TYPE connection show)
+}
 
-# wifi networks, only if a wifi device exists (nothing on the desktop)
-if nmcli -t -f TYPE device status | grep -qx wifi; then
-	entries+="  --- scan wifi ---"$'\n'
-	while IFS=: read -r ssid signal security; do
-		[[ -z "$ssid" ]] && continue
-		entries+="  ${ssid}  ${signal}%  ${security:-open}"$'\n'
-	done < <(nmcli -t -f SSID,SIGNAL,SECURITY device wifi list | sort -t: -k2 -rn | head -n 15)
-fi
+load_profiles() {
+	local uuid type on dev label
+	while IFS=: read -r uuid type on dev label; do
+		kind_of $type
+		[[ $REPLY == skip ]] && continue
+		order+=($uuid)
+		kind[$uuid]=$REPLY
+		active[$uuid]=$on
+		device[$uuid]=$dev
+		unesc "$label"; name[$uuid]=$REPLY
+	done < <(nmcli -t -f UUID,TYPE,ACTIVE,DEVICE,NAME connection show)
 
-entries+="  --- disconnect active ---"$'\n'
-entries+="  --- edit connections ---"
+	for uuid in $order; do
+		[[ ${kind[$uuid]} == wifi ]] || continue
+		unesc "$(nmcli -g 802-11-wireless.ssid connection show uuid $uuid)"
+		ssid[$uuid]=$REPLY
+		saved_ssid[$REPLY]=$uuid
+		[[ ${name[$uuid]} == $HOTSPOT_NAME ]] && hotspot=$uuid
+	done
 
-# ---- pick -----------------------------------------------------------------
-choice=$(printf '%s' "$entries" | "${MENU[@]}") || exit 0
-[[ -z "$choice" ]] && exit 0
+	for uuid in $order; do
+		[[ ${active[$uuid]} == yes && ${kind[$uuid]} != vpn && $uuid != $hotspot ]] || continue
+		primary=$uuid
+		break
+	done
+}
 
-# strip the leading marker and trailing annotation
-clean=$(sed -E 's/^[*[:space:]]+//; s/  \(.*\)$//; s/  [0-9]+%.*$//' <<<"$choice")
+has_wifi() { [[ -n ${(M)${(f)"$(nmcli -t -f TYPE device status)"}:#wifi} ]] }
 
-# ---- act ------------------------------------------------------------------
-case "$clean" in
-	"--- scan wifi ---")
-		nmcli device wifi rescan
-		sleep 2
-		exec "$0"
-		;;
-	"--- disconnect active ---")
-		[[ -n "$active" ]] && nmcli connection down "$active" && notify "Disconnected $active"
-		;;
-	"--- edit connections ---")
-		foot -e nmtui
-		;;
-	"$active")
-		nmcli connection down "$active" && notify "Disconnected $active"
-		;;
-	*)
-		if nmcli -t -f NAME connection show | grep -qxF "$clean"; then
-			nmcli connection up "$clean" && notify "Connected to $clean"
-		else
-			# unsaved wifi network — needs a passphrase
-			pass=$(printf '' | "${MENU[@]}" 2>/dev/null || true)
-			if [[ -n "$pass" ]]; then
-				nmcli device wifi connect "$clean" password "$pass" && notify "Connected to $clean"
-			else
-				nmcli device wifi connect "$clean" && notify "Connected to $clean"
-			fi
+# ---- main menu ------------------------------------------------------------
+build_main() {
+	local u state
+	[[ -n $primary ]] && add "  details: ${name[$primary]} on ${device[$primary]}" details
+
+	for u in $order; do
+		[[ ${kind[$u]} == vpn ]] && continue
+		[[ ${active[$u]} == yes ]] && state='*' || state=' '
+		add "$state ${name[$u]}  (${kind[$u]})" profile:$u
+	done
+
+	for u in $order; do
+		[[ ${kind[$u]} == vpn ]] || continue
+		[[ ${active[$u]} == yes ]] && state='[on] ' || state='[off]'
+		add "  vpn $state ${name[$u]}" vpn:$u
+	done
+
+	has_wifi && build_wifi
+
+	[[ -n $primary ]] && add "  --- disconnect ${name[$primary]} ---" down:$primary
+	add "  --- edit connections ---" edit
+}
+
+build_wifi() {
+	local wifi wwan
+	IFS=: read -r _ wifi _ wwan <<< "$(nmcli -t radio all)"
+
+	if [[ $wifi == enabled ]]; then
+		build_scan
+		add "  --- rescan wifi ---" rescan
+		add "  --- connect to hidden network ---" hidden
+		add "  --- wifi radio: on (turn off) ---" radio:off
+	else
+		add "  --- wifi radio: off (turn on) ---" radio:on
+	fi
+
+	if [[ $wifi == disabled && $wwan == disabled ]]; then
+		add "  --- airplane mode: on (turn off) ---" airplane:off
+	else
+		add "  --- airplane mode: off (turn on) ---" airplane:on
+	fi
+
+	if [[ -n $hotspot && ${active[$hotspot]} == yes ]]; then
+		add "  --- stop hotspot ---" down:$hotspot
+	elif [[ $wifi == enabled ]]; then
+		add "  --- start hotspot ---" hotspot
+	fi
+}
+
+build_scan() {
+	local inuse signal bars sec net mark
+	integer shown=0
+	local -A seen
+	while IFS=: read -r inuse signal bars sec net; do
+		unesc "$net"; net=$REPLY
+		[[ -z $net || $net == -- || -n ${seen[$net]-} ]] && continue
+		seen[$net]=1
+		(( shown++ < SCAN_LIMIT )) || break
+		[[ $sec == (|--) ]] && sec=open
+		net_sec[$net]=$sec
+		if [[ -n $primary && $net == ${ssid[$primary]-} ]]; then mark='*'
+		elif [[ -n ${saved_ssid[$net]-} ]]; then mark='+'
+		else mark=' '
 		fi
-		;;
-esac
+		add "$mark $bars  $net  $sec" ssid:$net
+	done < <(nmcli -t -f IN-USE,SIGNAL,BARS,SECURITY,SSID device wifi list | sort -t: -k2,2 -rn)
+}
+
+# ---- actions --------------------------------------------------------------
+dispatch() {
+	local arg=${1#*:}
+	case $1 in
+		details)     details_menu ;;
+		profile:*)   profile_menu $arg ;;
+		vpn:*)       toggle $arg ;;
+		up:*)        run "Connected to ${name[$arg]}" nmcli connection up uuid $arg ;;
+		down:*)      run "Disconnected ${name[$arg]}" nmcli connection down uuid $arg ;;
+		autoconnect:*) set_autoconnect ${arg%%:*} ${arg#*:} ;;
+		forget:*)    confirm "forget ${name[$arg]}" && run "Forgot ${name[$arg]}" nmcli connection delete uuid $arg ;;
+		qr:*)        share_qr $arg ;;
+		ssid:*)      connect_ssid $arg ;;
+		hidden)      ask_connect "" hidden yes ;;
+		rescan)      notify "Scanning..."; nmcli device wifi list --rescan yes > /dev/null; exec $SELF ;;
+		radio:*)     run "Wi-Fi radio $arg" nmcli radio wifi $arg ;;
+		airplane:on)  run "Airplane mode on" nmcli radio all off ;;
+		airplane:off) run "Airplane mode off" nmcli radio all on ;;
+		hotspot)     start_hotspot ;;
+		copy:*)      print -rn -- $arg | wl-copy && notify "Copied $arg" ;;
+		ping:*)      ping_host $arg ;;
+		portal)      xdg-open $PORTAL_URL &! ;;
+		edit)        "${TERMINAL[@]}" nmtui ;;
+	esac
+}
+
+toggle() {
+	if [[ ${active[$1]} == yes ]]; then dispatch down:$1
+	else dispatch up:$1
+	fi
+}
+
+profile_menu() {
+	local u=$1 ac
+	lines=() act=()
+	add "--- ${name[$u]} ---" none
+	if [[ ${active[$u]} == yes ]]; then add disconnect down:$u
+	else add connect up:$u
+	fi
+	ac=$(nmcli -g connection.autoconnect connection show uuid $u)
+	if [[ $ac == yes ]]; then add "autoconnect: yes (turn off)" autoconnect:$u:no
+	else add "autoconnect: no (turn on)" autoconnect:$u:yes
+	fi
+	[[ ${kind[$u]} == wifi ]] && add "share as QR code" qr:$u
+	add forget forget:$u
+	choose
+}
+
+set_autoconnect() {
+	run "Autoconnect for ${name[$1]}: $2" nmcli connection modify uuid $1 connection.autoconnect $2
+}
+
+connect_ssid() {
+	local net=$1
+	if [[ -n ${saved_ssid[$net]-} ]]; then
+		dispatch up:${saved_ssid[$net]}
+		return
+	fi
+	case ${net_sec[$net]} in
+		open)      run "Connected to $net" nmcli device wifi connect $net ;;
+		*802.1X*)  "${TERMINAL[@]}" nmtui connect ;;   # enterprise: needs identity + certs
+		*)         ask_connect $net ;;
+	esac
+}
+
+# Connect in a terminal so nmcli can prompt for the secret itself: the
+# password is typed hidden and never appears on any command line.
+ask_connect() {
+	"${TERMINAL[@]}" zsh -c '
+		net=$1; shift
+		[[ -z $net ]] && read -r "net?Hidden network name: "
+		[[ -z $net ]] && exit 0
+		if nmcli --ask device wifi connect "$net" "$@"; then
+			notify-send -a network-menu Network "Connected to $net"
+		else
+			notify-send -a network-menu Network "Failed to connect to $net"
+			print; read -rsk1 "?Press any key to close"
+		fi
+	' network-menu "$@"
+}
+
+# WIFI:T:<type>;S:<ssid>;P:<psk>;; with \ ; , : " escaped
+qr_escape() { REPLY=${1//(#b)([\\;,:\"])/\\${match[1]}} }
+
+share_qr() {
+	local u=$1 mgmt type net psk= payload tmp
+	(( $+commands[qrencode] )) || { notify "Install qrencode to share networks as QR codes"; return 1 }
+	mgmt=$(nmcli -g 802-11-wireless-security.key-mgmt connection show uuid $u)
+	case $mgmt in
+		'')      type=nopass ;;
+		wpa-psk) type=WPA ;;
+		sae)     type=SAE ;;   # WPA3
+		*) notify "Can't share ${name[$u]} as QR ($mgmt)"; return 1 ;;
+	esac
+	qr_escape "${ssid[$u]}"; net=$REPLY
+	if [[ $type != nopass ]]; then
+		unesc "$(nmcli -s -g 802-11-wireless-security.psk connection show uuid $u)"
+		qr_escape "$REPLY"; psk="P:$REPLY;"
+	fi
+	payload="WIFI:T:$type;S:$net;$psk;"
+	tmp=$(mktemp) || return 1
+	print -rn -- $payload | qrencode -t ansiutf8 -o $tmp
+	"${TERMINAL[@]}" $HOLD cat $tmp
+	rm -f $tmp
+}
+
+start_hotspot() {
+	if [[ -n $primary && ${kind[$primary]} == wifi ]]; then
+		confirm "start hotspot (drops ${name[$primary]})" || return 0
+	fi
+	"${TERMINAL[@]}" $HOLD nmcli --show-secrets device wifi hotspot con-name $HOTSPOT_NAME
+}
+
+# ---- details --------------------------------------------------------------
+details_menu() {
+	local dev=${device[$primary]} key val conn gw
+	conn=$(nmcli networking connectivity check)
+	lines=() act=()
+	add "connectivity: $conn" none
+	[[ $conn == (portal|limited) ]] && add "open captive portal login" portal
+
+	while IFS=: read -r key val; do
+		unesc "$val"; val=$REPLY
+		[[ -z $val || $val == -- ]] && continue
+		case ${key%%\[*} in
+			GENERAL.HWADDR) add "MAC: $val" copy:$val ;;
+			IP4.ADDRESS)    add "IPv4 address: $val" copy:${val%/*} ;;
+			IP4.GATEWAY)    add "gateway: $val" copy:$val; gw=$val ;;
+			IP4.DNS)        add "DNS: $val" copy:$val ;;
+			IP6.ADDRESS)    add "IPv6 address: $val" copy:${val%/*} ;;
+			IP6.GATEWAY)    add "IPv6 gateway: $val" copy:$val ;;
+		esac
+	done < <(nmcli -t -f GENERAL.HWADDR,IP4.ADDRESS,IP4.GATEWAY,IP4.DNS,IP6.ADDRESS,IP6.GATEWAY device show $dev)
+
+	[[ ${kind[$primary]} == wifi ]] && wifi_line
+	[[ -n ${gw-} ]] && add "ping gateway" ping:$gw
+	choose
+}
+
+wifi_line() {
+	local inuse chan freq rate signal net
+	while IFS=: read -r inuse chan freq rate signal net; do
+		[[ $inuse == '*' ]] || continue
+		unesc "$net"
+		add "Wi-Fi: $REPLY, channel $chan ($freq), $rate, signal $signal%" none
+		return
+	done < <(nmcli -t -f IN-USE,CHAN,FREQ,RATE,SIGNAL,SSID device wifi list --rescan no)
+}
+
+ping_host() {
+	local out
+	notify "Pinging $1..."
+	out=$(ping -c 3 -q $1 2>&1)
+	notify "$1: ${(pj:\n:)${(@M)${(@f)out}:#*(packet loss|rtt)*}:-unreachable}"
+}
+
+# ---- main -----------------------------------------------------------------
+main() {
+	load_profiles
+	build_main
+	choose
+	return 0
+}
+
+[[ $ZSH_EVAL_CONTEXT == toplevel ]] && main "$@"
