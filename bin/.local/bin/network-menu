@@ -9,6 +9,8 @@
 #   network  a Wi-Fi network seen in a scan, keyed by SSID
 #   action   what choosing a menu line does, e.g. "vpn:<uuid>"
 #   label    a menu line: "<icon>  <text>  <status icon>"
+#   setting  one editable property of a profile, shown in its Settings menu
+#   choice   a fixed value of a setting, picked from a radio list
 #
 # Needs: nmcli, hyprlauncher, foot. Optional: notify-send, wl-copy, qrencode.
 # Icons: a Nerd Font >= 3.0 (nf-md-* glyphs); NETWORK_MENU_ICONS=plain
@@ -69,6 +71,14 @@ if [[ $ICONS == nerd ]]; then
 		gateway   $'\U000f1087'   # md-router_network
 		dns       $'\U000f01d6'   # md-dns
 		ping      $'\U000f04c5'   # md-speedometer
+		settings  $'\U000f062e'   # md-tune
+		metered   $'\U000f029a'   # md-gauge
+		priority  $'\U000f0545'   # md-order_numeric_ascending
+		rename    $'\U000f0455'   # md-rename_box
+		password  $'\U000f0306'   # md-key
+		advanced  $'\U000f018d'   # md-console
+		radio_on  $'\U000f043e'   # md-radiobox_marked
+		radio_off $'\U000f043d'   # md-radiobox_blank
 	)
 	# md-wifi_strength_{outline,1,2,3,4} and md-wifi_strength_{lock_outline,N_lock}
 	SIGNAL_OPEN=($'\U000f092f' $'\U000f091f' $'\U000f0922' $'\U000f0925' $'\U000f0928')
@@ -76,7 +86,7 @@ if [[ $ICONS == nerd ]]; then
 else
 	# plain: kinds and states as text, actions without icons, nmcli BARS for signal
 	I=(wifi '[wifi]' ethernet '[eth]' vpn_on '[vpn]' vpn_off '[vpn]'
-		on '[on]' off '[off]' active '*' saved '+')
+		on '[on]' off '[off]' active '*' saved '+' radio_on '(*)' radio_off '( )')
 fi
 icon() { REPLY=; [[ -n ${1-} ]] && REPLY=${I[$1]-}; return 0 }
 
@@ -149,13 +159,13 @@ confirm() {
 }
 
 # run [-i icon] <success message> <command...>
-# notify the message, or the error nmcli printed
+# notify the message (none if empty), or the error nmcli printed
 run() {
 	local icon= msg out
 	[[ $1 == -i ]] && { icon=$2; shift 2 }
 	msg=$1; shift
 	if out=$("$@" 2>&1); then
-		notify $msg $icon
+		[[ -n $msg ]] && notify $msg $icon
 		return 0
 	fi
 	notify "Failed: ${${out##*$'\n'}:-$*}" dialog-error
@@ -303,6 +313,17 @@ dispatch() {
 		autoconnect:*) set_autoconnect ${arg%%:*} ${arg#*:} ;;
 		forget:*)    confirm "forget ${name[$arg]}" && run -i edit-delete "Forgot ${name[$arg]}" nmcli connection delete uuid $arg ;;
 		qr:*)        share_qr $arg ;;
+		settings:*)  settings_menu $arg ;;
+		ipv4:*)      ipv4_mode $arg; choice_menu $arg ipv4 ipv4 IPv4 "$REPLY" "${IPV4[@]}" ;;
+		dns:*)       dns_mode $arg; choice_menu $arg dns dns DNS "$REPLY" "${DNS[@]}" ;;
+		metered:*)   get $arg connection.metered; choice_menu $arg metered metered Metered "$REPLY" "${METERED[@]}" ;;
+		mac:*)       mac_prop $arg && get $arg $REPLY && choice_menu $arg mac mac "MAC address" "$REPLY" "${MAC[@]}" ;;
+		set:*)       apply_choice $arg ;;
+		gateway:*)   edit_gateway $arg ;;
+		priority:*)  edit_priority $arg ;;
+		rename:*)    rename $arg ;;
+		password:*)  change_password $arg ;;
+		advanced:*)  "${TERMINAL[@]}" -T "Edit ${name[$arg]}" nmtui edit $arg; settings_menu $arg ;;
 		ssid:*)      connect_ssid $arg ;;
 		hidden)      ask_connect "" hidden yes ;;
 		rescan)      notify "Scanning..." view-refresh; nmcli device wifi list --rescan yes > /dev/null; exec $SELF ;;
@@ -338,6 +359,7 @@ profile_menu() {
 		add autoconnect:$u:yes autoconn Autoconnect off
 	fi
 	[[ ${kind[$u]} == wifi ]] && add qr:$u qr "Share as QR code"
+	add settings:$u settings Settings
 	add forget:$u forget Forget
 	add back back Back
 	choose
@@ -385,7 +407,7 @@ qr_escape() { REPLY=${1//(#b)([\\;,:\"])/\\${match[1]}} }
 share_qr() {
 	local u=$1 mgmt type net psk= payload tmp
 	(( $+commands[qrencode] )) || { notify "Install qrencode to share networks as QR codes" dialog-error; return 1 }
-	mgmt=$(nmcli -g 802-11-wireless-security.key-mgmt connection show uuid $u)
+	get $u 802-11-wireless-security.key-mgmt; mgmt=$REPLY
 	case $mgmt in
 		'')      type=nopass ;;
 		wpa-psk) type=WPA ;;
@@ -394,7 +416,7 @@ share_qr() {
 	esac
 	qr_escape "${ssid[$u]}"; net=$REPLY
 	if [[ $type != nopass ]]; then
-		unesc "$(nmcli -s -g 802-11-wireless-security.psk connection show uuid $u)"
+		get -s $u 802-11-wireless-security.psk
 		qr_escape "$REPLY"; psk="P:$REPLY;"
 	fi
 	payload="WIFI:T:$type;S:$net;$psk;"
@@ -411,6 +433,256 @@ start_hotspot() {
 		confirm "start hotspot (drops ${name[$primary]})" ap_on || return 0
 	fi
 	"${TERMINAL[@]}" -T "Hotspot" $HOLD nmcli --show-secrets device wifi hotspot con-name $HOTSPOT_NAME
+}
+
+# ---- settings -------------------------------------------------------------
+# Choices: value, label pairs in menu order. The status shown in the
+# Settings menu is the label with a lowercase first letter.
+IPV4=(auto 'Automatic (DHCP)' manual 'Manual address' disabled 'Disabled')
+DNS=(auto 'Automatic (DHCP)' only 'Custom servers only' extra 'DHCP + extra servers')
+METERED=(yes 'Yes' no 'No' unknown 'Let NetworkManager guess')
+MAC=('' 'Default' permanent 'Permanent (real MAC)' random 'Random each time' stable 'Stable per network')
+
+# get [-s] <uuid> <property>: one stored value, unescaped (-s: include secrets)
+get() {
+	local secrets=()
+	[[ $1 == -s ]] && { secrets=(-s); shift }
+	unesc "$(nmcli $secrets -g $2 connection show uuid $1)"
+}
+
+# live <uuid> <field>: first value of a device field while the profile is up
+live() {
+	REPLY=
+	[[ ${active[$1]} == yes && -n ${device[$1]} ]] || return 1
+	local -a out=(${(f)"$(nmcli -t -f $2 device show ${device[$1]})"})
+	unesc "${${out[1]-}#*:}"
+}
+
+# status <value> <pairs...>: lowercase label of the value, or the raw value
+status() {
+	local val=$1
+	shift
+	while (( $# >= 2 )); do
+		[[ $1 == $val ]] && { REPLY="${(L)2[1]}${2[2,-1]}"; return }
+		shift 2
+	done
+	REPLY=$val
+}
+
+ipv4_mode() { get $1 ipv4.method }
+
+dns_mode() {
+	local servers ignore
+	get $1 ipv4.dns; servers=$REPLY
+	get $1 ipv4.ignore-auto-dns; ignore=$REPLY
+	if [[ $ignore == yes ]]; then REPLY=only
+	elif [[ -n $servers ]]; then REPLY=extra
+	else REPLY=auto
+	fi
+}
+
+mac_prop() {
+	case ${kind[$1]} in
+		wifi)     REPLY=802-11-wireless.cloned-mac-address ;;
+		ethernet) REPLY=802-3-ethernet.cloned-mac-address ;;
+		*)        return 1 ;;
+	esac
+}
+
+has_password() {
+	[[ ${kind[$1]} == wifi ]] || return 1
+	get $1 802-11-wireless-security.key-mgmt
+	[[ $REPLY == (wpa-psk|sae) ]]
+}
+
+settings_menu() {
+	local u=$1 servers
+	submenu settings "Settings · ${name[$u]}"
+
+	ipv4_mode $u
+	if [[ $REPLY == manual ]]; then
+		get $u ipv4.addresses; add ipv4:$u ipv4 "IPv4 · manual $REPLY"
+		get $u ipv4.gateway;   add gateway:$u gateway "Gateway · ${REPLY:-none}"
+	else
+		status "$REPLY" "${IPV4[@]}";   add ipv4:$u ipv4 "IPv4 · $REPLY"
+	fi
+
+	get $u ipv4.dns; servers=${REPLY//,/, }
+	dns_mode $u
+	case $REPLY in
+		auto)  add dns:$u dns "DNS · automatic" ;;
+		only)  add dns:$u dns "DNS · ${${servers:+$servers only}:-none}" ;;
+		extra) add dns:$u dns "DNS · DHCP + $servers" ;;
+	esac
+
+	get $u connection.metered; status "$REPLY" "${METERED[@]}"
+	add metered:$u metered "Metered · $REPLY"
+	if mac_prop $u; then
+		get $u $REPLY; status "$REPLY" "${MAC[@]}"
+		add mac:$u mac "MAC address · $REPLY"
+	fi
+	get $u connection.autoconnect-priority
+	add priority:$u priority "Autoconnect priority · $REPLY"
+	add rename:$u rename "Rename · ${name[$u]}"
+	has_password $u && add password:$u password "Change password"
+	add advanced:$u advanced "Advanced settings (nmtui)"
+	add profile:$u back Back
+	choose
+}
+
+# choice_menu <uuid> <setting> <icon> <title> <current value> <pairs...>
+choice_menu() {
+	local u=$1 setting=$2 current=$5
+	submenu $3 $4
+	shift 5
+	while (( $# >= 2 )); do
+		if [[ $1 == $current ]]; then add "set:$setting:$u:$1" radio_on $2
+		else add "set:$setting:$u:$1" radio_off $2
+		fi
+		shift 2
+	done
+	add settings:$u back Back
+	choose
+}
+
+# apply_choice <setting>:<uuid>:<value>
+apply_choice() {
+	local setting=${1%%:*} rest=${1#*:}
+	local u=${rest%%:*} val=${rest#*:}
+	case $setting:$val in
+		ipv4:auto)     modify $u ipv4.method auto ipv4.addresses "" ipv4.gateway "" ;;
+		ipv4:manual)   set_manual_ipv4 $u ;;
+		ipv4:disabled) modify $u ipv4.method disabled ;;
+		dns:auto)      modify $u ipv4.dns "" ipv4.ignore-auto-dns no ;;
+		dns:only)      ask_dns $u && modify $u ipv4.dns $REPLY ipv4.ignore-auto-dns yes ;;
+		dns:extra)     ask_dns $u && modify $u ipv4.dns $REPLY ipv4.ignore-auto-dns no ;;
+		metered:*)     modify $u connection.metered "$val" ;;
+		mac:*)         mac_prop $u && modify $u $REPLY "$val" ;;
+	esac
+	settings_menu $u
+}
+
+# modify <uuid> <property> <value>...: save, then reconnect an active
+# profile so the change takes effect now
+modify() {
+	local u=$1
+	shift
+	run "" nmcli connection modify uuid $u "$@" || return 1
+	if [[ ${active[$u]} == yes ]]; then
+		run "Saved and reapplied ${name[$u]}" nmcli connection up uuid $u
+	else
+		notify "Saved ${name[$u]}"
+	fi
+}
+
+# prompt <title> <label> <initial>: edit one line in a terminal, pre-filled.
+# REPLY = the text; returns 0 if non-empty, 1 if empty, 2 if cancelled.
+prompt() {
+	local out
+	out=$(mktemp) || return 2
+	"${TERMINAL[@]}" -T $1 zsh -c '
+		out=$1 val=$3
+		print "Enter to save, Ctrl+C to cancel\n"
+		if [[ -t 0 ]]; then vared -p "$2: " val || exit 1
+		else read -r val || exit 1   # piped input, no terminal
+		fi
+		print -r -- "=$val" > $out
+	' network-menu $out $2 $3
+	REPLY=$(<$out)
+	rm -f $out
+	[[ -z $REPLY ]] && return 2
+	REPLY=${REPLY#=}
+	[[ -n $REPLY ]]
+}
+
+# NetworkManager stores an address without prefix as /32, which breaks
+# routing on a LAN: keep the prefix the user started from (or /24).
+set_manual_ipv4() {
+	local u=$1 addr gw prefix=24
+	get $u ipv4.addresses; addr=${REPLY%%,*}
+	[[ -z $addr ]] && live $u IP4.ADDRESS && addr=$REPLY
+	[[ $addr == */* ]] && prefix=${addr##*/}
+	prompt "IPv4 · ${name[$u]}" "IPv4 address" "$addr" || return 0
+	addr=$REPLY
+	[[ $addr == */* ]] || addr+=/$prefix
+
+	get $u ipv4.gateway; gw=$REPLY
+	[[ -z $gw ]] && live $u IP4.GATEWAY && gw=$REPLY
+	prompt "IPv4 · ${name[$u]}" "Gateway" "$gw"
+	(( $? == 2 )) && return 0      # empty = no gateway, cancel = no change
+	modify $u ipv4.method manual ipv4.addresses $addr ipv4.gateway "$REPLY"
+}
+
+edit_gateway() {
+	local u=$1
+	get $u ipv4.gateway
+	prompt "IPv4 · ${name[$u]}" "Gateway" "$REPLY"
+	(( $? != 2 )) && modify $u ipv4.gateway "$REPLY"
+	settings_menu $u
+}
+
+# DNS servers separated by spaces or commas -> "a,b"
+ask_dns() {
+	get $1 ipv4.dns
+	prompt "DNS · ${name[$1]}" "DNS servers" "${REPLY//,/ }" || return 1
+	REPLY=${(j:,:)${(s: :)${REPLY//,/ }}}
+}
+
+edit_priority() {
+	local u=$1
+	get $u connection.autoconnect-priority
+	prompt "Priority · ${name[$u]}" "Autoconnect priority" "$REPLY" \
+		&& run "Autoconnect priority for ${name[$u]}: $REPLY" \
+			nmcli connection modify uuid $u connection.autoconnect-priority $REPLY
+	settings_menu $u
+}
+
+rename() {
+	local u=$1 new
+	if prompt "Rename ${name[$u]}" "Name" "${name[$u]}"; then
+		new=$REPLY
+		run "Renamed ${name[$u]} to $new" nmcli connection modify uuid $u connection.id $new \
+			&& name[$u]=$new
+	fi
+	settings_menu $u
+}
+
+# The new password is read in the terminal and handed to nmcli's editor on
+# stdin (print is a shell builtin), so it never appears on a command line,
+# in a file or in a notification. Only a status comes back.
+change_password() {
+	local u=$1 out res
+	out=$(mktemp) || return 1
+	"${TERMINAL[@]}" -T "Password · ${name[$u]}" zsh -c '
+		out=$1 u=$2
+		print "Ctrl+C to cancel\n"
+		read -rs "p1?New password: " || exit; print
+		read -rs "p2?Repeat password: " || exit; print
+		[[ -z $p1 ]] && exit
+		if [[ $p1 != $p2 ]]; then print mismatch > $out; exit; fi
+		res=$(print -rl -- "set 802-11-wireless-security.psk $p1" "save persistent" quit \
+			| nmcli connection edit uuid $u 2>&1)
+		if [[ $res == *"successfully updated"* ]]; then
+			print ok > $out
+		else
+			err=${(M)${(f)res}:#*Error:*}
+			print -r -- "${err//${(b)p1}/***}" > $out
+		fi
+	' network-menu $out $u
+	res=$(<$out)
+	rm -f $out
+	case $res in
+		'') ;;
+		ok)
+			if [[ ${active[$u]} == yes ]]; then
+				run "Password for ${name[$u]} updated" nmcli connection up uuid $u
+			else
+				notify "Password for ${name[$u]} updated"
+			fi ;;
+		mismatch) notify "Passwords don't match" dialog-error ;;
+		*)        notify "Failed: $res" dialog-error ;;
+	esac
+	settings_menu $u
 }
 
 # ---- details --------------------------------------------------------------
