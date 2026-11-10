@@ -94,7 +94,9 @@ hl.config({
 
 	animations = {
 		enabled = true,
-	}
+	},
+
+	quirks = { skip_non_kms_dmabuf_formats = false }
 })
 
 

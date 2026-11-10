@@ -47,7 +47,7 @@ Stages run individually: `packages`, `dirs`, `stow`, `post`, `services`, `manual
 `services` — a broken greeter means no graphical login.
 
 For the OS install underneath this (partitioning, btrfs subvolumes, limine,
-snapper, zram) see **arch-install.md**.
+snapper, zram) see [**arch-install.md**.](https://git.h0stb3rry.org/r1ck/dotfiles/src/branch/main/arch-install.md)
 
 ---
 
@@ -89,7 +89,7 @@ and systemd user services never read `.zshrc`.
 ## What is NOT in here, and why
 
 **Anything reproducible from a package.** The GTK4 stylesheet is a symlink into
-`/usr/share/themes/`, so `install.sh post` recreates it rather than tracking a
+`/usr/share/themes/`, so [`install.sh`](https://git.h0stb3rry.org/r1ck/dotfiles/src/branch/main/install.sh)` post` recreates it rather than tracking a
 dangling link. Stow refuses to stow a symlink anyway.
 
 **Anything a program writes.** MPD's `database` and `sticker.sql`, yazi and btop
@@ -133,7 +133,7 @@ comm -23 <(grep -v '^#' packages.txt | awk 'NF {print $1}' | sort -u) <(pacman -
 comm -13 <(grep -v '^#' packages.txt | awk 'NF {print $1}' | sort -u) <(pacman -Qeq | sort)
 ```
 
-**Every comment in `packages.txt` must start at column 0** — indented comments
+**Every comment in [`packages.txt`](https://git.h0stb3rry.org/r1ck/dotfiles/src/branch/main/packages.txt) must start at column 0** — indented comments
 are not filtered by `grep -v '^#'` and `awk` then emits `#` as a package name.
 
 ---
