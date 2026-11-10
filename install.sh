@@ -128,7 +128,7 @@ services() {
 
 	say "User units"
 	systemctl --user daemon-reload
-	systemctl --user enable --now mpd mpd.socket mpd-mpris playerctld syncthing graphical-session waybar hypridle
+	systemctl --user enable --now mpd mpd.socket mpd-mpris playerctld syncthing waybar hypridle
 }
 
 # ------------------------------------------------------------------ manual
@@ -136,6 +136,8 @@ manual() {
 	cat <<'EOF'
 
 Steps no script can do — GUI clicks and per-machine values:
+
+  tui-greet           edit /etc/greetd/config.toml and enable greetd.service
 
   nwg-look            pick rose-pine theme, icons, cursor, font -> Apply
                       (writes gtk-3.0/settings.ini AND a binary dconf db,
@@ -148,30 +150,12 @@ Steps no script can do — GUI clicks and per-machine values:
                       (default 2 = auto, which picks the internal GTK dialog
                        and termfilechooser never fires)
 
-  Steam               Settings -> Compatibility -> enable Steam Play for all
-                      titles. On the Vulkan driver prompt during install,
-                      choose the driver matching the GPU — pacman offers
-                      lib32-nvidia-utils first by alphabetical order, which
-                      breaks Vulkan on AMD and Intel.
-
   Heroic              Accessibility -> Custom Themes Path ->
                       ~/.config/heroic-themes
 
   waybar              config.jsonc "temperature" -> hwmon-path differs per
                       machine:
                         for f in /sys/class/hwmon/*/name; do echo "$f: $(cat $f)"; done
-
-  Syncthing           http://127.0.0.1:8384 — pair devices, and tick
-                      "Introducer" on the always-on one so folders propagate
-
-  WireGuard           nmcli connection import type wireguard file /etc/wireguard/wg0.conf
-                      nmcli connection modify wg0 connection.autoconnect no
-                      DNS: needs systemd-resolved + systemd-resolvconf, or
-                      NetworkManager overwrites resolv.conf and the tunnel
-                      appears to die after a while.
-
-  Forgejo             register this machine's SSH key, or use an access token
-                      over HTTPS
 
 For the OS-level install (partitioning, btrfs subvolumes, limine, snapper,
 zram), see arch-install.md.

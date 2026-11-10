@@ -190,8 +190,9 @@ limine bios-install "$DISK"
 `/boot/limine.conf`:
 ```
 timeout: 3
+default_entry: 2
 
-/Arch Linux
+/+Arch Linux
 
 //Arch Linux
     protocol: linux
@@ -212,7 +213,7 @@ timeout: 3
   (`'fallback'` in `/etc/mkinitcpio.d/linux.preset`, then `mkinitcpio -P`), or
   limine-snapper-sync skips snapshot creation entirely.
 
-Redeploy hook, `/etc/pacman.d/hooks/limine.hook` - UEFI version; on BIOS the
+Redeploy hook, `/etc/pacman.d/hooks/99-limine.hook` - UEFI version; on BIOS the
 `Exec` line becomes `limine bios-install $DISK`:
 ```ini
 [Trigger]
@@ -340,45 +341,6 @@ sudo snapper -c root create -d "clean base install"
 ```
 
 From here: clone the dotfiles repo and run `./install.sh`.
-
----
-
-## Graphical session
-
-Hyprland doesn't tell systemd it's a graphical session, so portals (XDPH
-included) and any `WantedBy=graphical-session.target` unit won't start.
-
-`~/.config/systemd/user/hyprland-session.target` - create it with
-`SYSTEMD_EDITOR=nvim systemctl --user edit --full --force hyprland-session.target`
-(systemd's editor fallback list is `editor`, `nano`, `vim`, `vi`, none of which
-may exist):
-
-```ini
-[Unit]
-Description=Hyprland session
-BindsTo=graphical-session.target
-Wants=graphical-session-pre.target
-After=graphical-session-pre.target
-PropagatesStopTo=graphical-session.target
-```
-
-`BindsTo=` starts `graphical-session.target`; `PropagatesStopTo=` tears it down
-when Hyprland exits.
-
-Started from the Lua config:
-```lua
-hl.on("hyprland.start", function()
-    hl.exec_cmd("systemctl --user start hyprland-session.target")
-end)
-```
-
-Verify with `systemctl --user list-dependencies hyprland-session.target` and
-`systemctl --user status xdg-desktop-portal-hyprland`. If the portal is active
-the target works; if it's dead, screenshots and screen sharing are what break.
-
-No `dbus-update-activation-environment` call is needed - Hyprland manages the
-systemd and dbus activation environments itself, disabled only via
-`HYPRLAND_NO_SD_VARS=1`.
 
 ---
 
