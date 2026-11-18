@@ -5,6 +5,7 @@
 !home/**
 !hypr/**
 !starship/**
+xdg/.local/share/**
 !xdg/.config/**
 !xdg/.local/share/applications/nvim.desktop
 !xdg/.local/share/applications/yazi.desktop
@@ -25,4 +26,6 @@ nvim/.config/nvim/nvim-pack-lock.json
 !README.md
 !install.sh
 !systemd/**
+systemd/.config/systemd/user/graphical-session.target.wants/
 !preview.gif
+
