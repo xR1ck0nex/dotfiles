@@ -85,6 +85,21 @@ function y() {
 	rm -f -- "$tmp"
 }
 
+# pacclean: Clean pacman + paru caches, including leftover pacman download-* dirs
+pacclean() {
+	if [[ -e /var/lib/pacman/db.lck ]]; then
+		print -u2 "pacclean: pacman is running (db.lck present), aborting"
+		return 1
+	fi
+
+	local -a leftovers=(/var/cache/pacman/pkg/download-*(N/))
+	if (( ${#leftovers} )); then
+		sudo rm -rf -- $leftovers || return
+	fi
+
+	paru -Sccd "$@"
+}
+
 
 # --- fzf -------------------------------------------------------------
 [ -f /usr/share/fzf/key-bindings.zsh ] && source /usr/share/fzf/key-bindings.zsh
