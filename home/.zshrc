@@ -58,6 +58,9 @@ bindkey -M vicmd '/' history-incremental-search-forward
 bindkey -M vicmd '?' history-incremental-search-backward
 
 # k/j search history by what's already typed
+autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
+zle -N up-line-or-beginning-search
+zle -N down-line-or-beginning-search
 bindkey -M vicmd 'k' up-line-or-beginning-search
 bindkey -M vicmd 'j' down-line-or-beginning-search
 
@@ -85,19 +88,35 @@ function y() {
 	rm -f -- "$tmp"
 }
 
-# pacclean: Clean pacman + paru caches, including leftover pacman download-* dirs
+# pacclean: remove orphans, leftover pacman download-* dirs, then pacman + paru caches.
+# Cache-clean prompts are all answered yes; orphan removal still asks.
 pacclean() {
 	if [[ -e /var/lib/pacman/db.lck ]]; then
 		print -u2 "pacclean: pacman is running (db.lck present), aborting"
 		return 1
 	fi
 
-	local -a leftovers=(/var/cache/pacman/pkg/download-*(N/))
-	if (( ${#leftovers} )); then
-		sudo rm -rf -- $leftovers || return
+	print -P "%F{blue}::%f Checking for orphaned packages..."
+	local -a orphans=(${(f)"$(paru -Qdtq)"})
+	if (( ${#orphans} )); then
+		print -- "   ${#orphans} orphan(s): ${orphans}"
+		paru -Rsnu -- $orphans
+	else
+		print "   No orphans found"
 	fi
 
-	paru -Sccd "$@"
+	print -P "%F{blue}::%f Checking for leftover pacman download-* dirs..."
+	local -a leftovers=(/var/cache/pacman/pkg/download-*(N/))
+	if (( ${#leftovers} )); then
+		print -l -- "   Removing ${#leftovers} dir(s):" "${leftovers[@]/#/     }"
+		sudo rm -rf -- $leftovers || return
+	else
+		print "   No leftovers found"
+	fi
+
+	print -P "%F{blue}::%f Cleaning pacman + paru caches (answering yes to all prompts)..."
+	yes | paru -Sccd "$@"
+	print -P "%F{green}::%f pacclean done"
 }
 
 
